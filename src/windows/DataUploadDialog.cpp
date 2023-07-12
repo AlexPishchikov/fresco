@@ -1,12 +1,18 @@
+#include <QColor>
 #include <QComboBox>
 #include <QDialog>
+#include <QDir>
 #include <QDirIterator>
 #include <QFile>
 #include <QFileDialog>
+#include <QFileInfo>
+#include <QGraphicsOpacityEffect>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMovie>
+#include <QPoint>
 #include <QPushButton>
+#include <QRadialGradient>
 #include <QString>
 #include <QStringList>
 #include <QThreadPool>
@@ -25,6 +31,8 @@
 DataUploadDialog::DataUploadDialog(QWidget *parent) : QDialog(parent) {
     // this->config = &DataUploadDialogConfig();
 
+    this->init_cached_tables_dir();
+
     ui.setupUi(this);
 
     this->setFixedSize(this->size());
@@ -37,39 +45,75 @@ DataUploadDialog::DataUploadDialog(QWidget *parent) : QDialog(parent) {
     this->switch_theme(this->current_theme);
     connect(this->ui.switch_theme_button, &QPushButton::clicked, this, [=]{this->switch_theme(this->current_theme == "dark" ? "light" : "dark");});
 
-    // self.gradient = QRadialGradient(QPoint(339, 20), 320, QPoint(319, 20), 20)
-    // self.gradient.setColorAt(0.0, QColor(0, 0, 0, 255))
-    // self.gradient.setColorAt(0.9, QColor(0, 0, 0, 255))
-    // self.gradient.setColorAt(1.0, QColor(0, 0, 0, 0))
-    // self.effect = QGraphicsOpacityEffect()
-    // self.effect.setOpacityMask(self.gradient)
-    // self.status_label.setGraphicsEffect(self.effect)
+    QRadialGradient gradient = QRadialGradient(QPoint(339, 20), 320, QPoint(319, 20), 20);
+    gradient.setColorAt(0.0, QColor(0, 0, 0, 255));
+    gradient.setColorAt(0.9, QColor(0, 0, 0, 255));
+    gradient.setColorAt(1.0, QColor(0, 0, 0, 0));
+
+    QGraphicsOpacityEffect *effect = new QGraphicsOpacityEffect;
+    effect->setOpacityMask(gradient);
+    this->ui.status_label->setGraphicsEffect(effect);
 
     this->fill_combo_box();
 }
 
-void DataUploadDialog::run_loading_gif() {
-    this->loading_gif.stop();
-    this->ui.status_label->setMovie(&this->loading_gif);
-    this->loading_gif.start();
+void DataUploadDialog::init_cached_tables_dir() const {
+    if (!QFileInfo::exists("uploaded_tables")) {
+        QDir().mkdir("uploaded_tables");
+    }
 }
 
-void DataUploadDialog::switch_theme(const QString &theme) {
-    this->current_theme = theme;
-    this->loading_gif.setFileName(QString(":load_gif_%1").arg(theme));
+QStringList DataUploadDialog::get_tables_list() const {
+    QFile tables_list_file("uploaded_tables/tables_list");
+    tables_list_file.open(QFile::ReadOnly);
 
-    QFile qss_file(QString(":%1_theme").arg(theme));
-    qss_file.open(QFile::ReadOnly);
-    this->setStyleSheet(QLatin1String(qss_file.readAll()));
+    QStringList tables_list;
+
+    while (!tables_list_file.atEnd()) {
+        QStringList line = QString(tables_list_file.readLine()).split(' ');
+        line.pop_back();
+        tables_list.append(line.join(' '));
+    }
+    return tables_list;
 }
 
 void DataUploadDialog::fill_combo_box() {
-    QDirIterator it("uploaded_tables", QStringList() << "*.csv");
-    // QDirIterator it(this->config.folder, QStringList() << "*.csv");
-    while (it.hasNext()) {
-        const QStringList path = it.next().split('/');
-        this->ui.tables_combo_box->addItem(path[path.size() - 1]);
+    const QDir tables_folder("uploaded_tables/");
+    const QStringList files_list = tables_folder.entryList(QStringList() << "*.csv", QDir::Files);
+    const QStringList tables_list = get_tables_list(); 
+    for (int i = 0; i < files_list.size(); i++) {
+        if (tables_list.contains(files_list[i])) {
+            this->ui.tables_combo_box->addItem(files_list[i]);
+        }
     }
+}
+
+void DataUploadDialog::load_table_from_file() {
+    const QString file_path = QFileDialog::getOpenFileName(this, "Выбрать файл с таблицей", ".", "CSV(*.csv);;");
+    if (file_path == "") {
+        return;
+    }
+
+    this->run_loading_gif();
+
+    if (this->check_table_structure(file_path)) {
+        this->show_fresco_window(file_path);
+    }
+    else {
+        this->ui.status_label->setText("Некорректная структура таблицы");
+    }
+}
+
+void DataUploadDialog::load_table_from_cache() {
+    if (this->ui.tables_combo_box->currentText() == "") {
+        return;
+    }
+
+    const QString url = QString("https://docs.google.com/spreadsheets/d/%1/edit#gid=%2")
+                                .arg(this->get_sheet_id_from_file(this->ui.tables_combo_box->currentText()))
+                                .arg(this->get_table_id_from_file(this->ui.tables_combo_box->currentText()));
+    this->ui.url_line_edit->setText(url);
+    this->load_table_by_url(true);
 }
 
 void DataUploadDialog::load_table_by_url(const bool cache) {
@@ -108,6 +152,42 @@ void DataUploadDialog::load_table_by_url(const bool cache) {
     // f.wait();
     // qDebug() << "sdf2";
 
+}
+
+QString DataUploadDialog::get_table_id_from_url(const QString &url) const {
+    const QStringList url_split = url.split('/');
+    return url_split[url_split.size() - 2];
+}
+
+QString DataUploadDialog::get_sheet_id_from_url(const QString &url) const {
+    return url.split('=')[1];
+}
+
+QString DataUploadDialog::get_table_id_from_file(const QString &filename) const {
+    // QStringList tables_list = DataUploadDialog::get_tables_list();
+    // return DataUploadDialog::get_table_id_from_url(tables_list[filename]);
+    return QString();
+}
+
+QString DataUploadDialog::get_sheet_id_from_file(const QString &filename) const {
+    // QStringList tables_list = DataUploadDialog::get_tables_list();
+    // return DataUploadDialog::get_sheet_id_from_url(tables_list[filename]);
+    return QString();
+}
+
+bool DataUploadDialog::is_correct_url() const {
+    if (this->is_url() && this->ui.url_line_edit->text().split('=').size() >= 2 && this->ui.url_line_edit->text().split('/').size() >= 2) {
+        bool is_number;
+        this->ui.url_line_edit->text().split('=')[1].toUInt(&is_number, 10);
+        return is_number;
+    }
+    return false;
+}
+
+bool DataUploadDialog::is_url() const {
+    // regex = re.compile(r'^(?:https://|http://)?(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?))|(?:/?|[/?]\S+)$', re.IGNORECASE)
+    // return re.match(regex, self.url_line_edit.text()) is not None
+    return true;
 }
 
 void DataUploadDialog::process_downloaded_table(const QString &table_url, const int response, const bool cache) {
@@ -166,92 +246,24 @@ void DataUploadDialog::process_downloaded_table(const QString &table_url, const 
     //     return
 }
 
-void DataUploadDialog::load_table_from_file() {
-    const QString file_path = QFileDialog::getOpenFileName(this, "Выбрать файл с таблицей", ".", "CSV(*.csv);;");
-    if (file_path == "") {
-        return;
-    }
-
-    this->run_loading_gif();
-
-    if (this->check_table_structure(file_path)) {
-        this->show_fresco_window(file_path);
-    }
-    else {
-        this->ui.status_label->setText("Некорректная структура таблицы");
-    }
-}
-
-void DataUploadDialog::load_table_from_cache() {
-    if (this->ui.tables_combo_box->currentText() == "") {
-        return;
-    }
-
-    const QString url = QString("https://docs.google.com/spreadsheets/d/%1/edit#gid=%2")
-                                .arg(this->get_sheet_id_from_file(this->ui.tables_combo_box->currentText()))
-                                .arg(this->get_table_id_from_file(this->ui.tables_combo_box->currentText()));
-    this->ui.url_line_edit->setText(url);
-    this->load_table_by_url(true);
-}
-
-QStringList DataUploadDialog::get_tables_list() const {
-    // QStringList tables_list;
-    // QFile tables_list_file(file_path);
-    // tables_list_file.open(QFile::ReadOnly);
-    // QString line = tables_list_file.readLine();
-
-//     with open(f'{self.config.upload_data_folder_name}/tables_list', 'r') as tables_list_file:
-//         for line in tables_list_file:
-//             name = line.split(' ')
-//             url = name.pop()
-//             tables_list[' '.join(name)] = url[0:-1]
-//     return tables_list
-    return QStringList();
-}
-
 bool DataUploadDialog::check_table_structure(const QString &file_path) const {
     QFile table_file(file_path);
     table_file.open(QFile::ReadOnly);
     table_file.readLine();
-    QString line = table_file.readLine();
+    const QString line = table_file.readLine();
 
     return line.split(',').contains("Промежуточный рейтинг");
 }
 
-QString DataUploadDialog::get_table_id_from_url(const QString &url) const {
-    const QStringList temp = url.split('/');
-    return temp[temp.size() - 2];
+void DataUploadDialog::show_fresco_window(const QString &data_file_name) {
+    this->close();
+    // FrescoWindow(data_file_name, this->config.rating_col_name, this->current_theme).show();
 }
 
-QString DataUploadDialog::get_sheet_id_from_url(const QString &url) const {
-    return url.split('=')[1];
-}
-
-QString DataUploadDialog::get_table_id_from_file(const QString &filename) const {
-    // QStringList tables_list = DataUploadDialog::get_tables_list();
-    // return DataUploadDialog::get_table_id_from_url(tables_list[filename]);
-    return QString();
-}
-
-QString DataUploadDialog::get_sheet_id_from_file(const QString &filename) const {
-    // QStringList tables_list = DataUploadDialog::get_tables_list();
-    // return DataUploadDialog::get_sheet_id_from_url(tables_list[filename]);
-    return QString();
-}
-
-bool DataUploadDialog::is_correct_url() const {
-    if (this->is_url() && this->ui.url_line_edit->text().split('=').size() >= 2 && this->ui.url_line_edit->text().split('/').size() >= 2) {
-        bool is_number;
-        this->ui.url_line_edit->text().split('=')[1].toUInt(&is_number, 10);
-        return is_number;
-    }
-    return false;
-}
-
-bool DataUploadDialog::is_url() const {
-    // regex = re.compile(r'^(?:https://|http://)?(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?))|(?:/?|[/?]\S+)$', re.IGNORECASE)
-    // return re.match(regex, self.url_line_edit.text()) is not None
-    return true;
+void DataUploadDialog::run_loading_gif() {
+    this->loading_gif.stop();
+    this->ui.status_label->setMovie(&this->loading_gif);
+    this->loading_gif.start();
 }
 
 void DataUploadDialog::switch_widgets_status() {
@@ -262,7 +274,11 @@ void DataUploadDialog::switch_widgets_status() {
     this->ui.switch_theme_button->setEnabled(!this->ui.switch_theme_button->isEnabled());
 }
 
-void DataUploadDialog::show_fresco_window(const QString &data_file_name) {
-    this->close();
-    // FrescoWindow(data_file_name, this->config.rating_col_name, this->current_theme).show();
+void DataUploadDialog::switch_theme(const QString &theme) {
+    this->current_theme = theme;
+    this->loading_gif.setFileName(QString(":load_gif_%1").arg(theme));
+
+    QFile qss_file(QString(":%1_theme").arg(theme));
+    qss_file.open(QFile::ReadOnly);
+    this->setStyleSheet(QLatin1String(qss_file.readAll()));
 }

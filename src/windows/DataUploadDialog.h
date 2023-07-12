@@ -20,6 +20,8 @@ class DataUploadDialog : public QDialog {
         QMovie loading_gif;
         QString current_theme;
 
+        void init_cached_tables_dir() const;
+
         QStringList get_tables_list() const;
 
         void fill_combo_box();
