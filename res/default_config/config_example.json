@@ -1,0 +1,11 @@
+{
+    "fresco_name_icon_color" : "red",
+    "roulette_button_size" : 90,
+    "roulette_close_button_font_size" : 30,
+    "roulette_shot_hole_label_size" : 250,
+    "fresco_generate_riddle_button_text" : "Сгенерировать загадку",
+    "fresco_custom_student_rating" : 5,
+    "fresco_attempts_count_init_value" : 1,
+    "fresco_name_combo_box_placeholder" : "--",
+    "fresco_time_over_text" : "с васб питса"
+}

@@ -1,0 +1,36 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource>
+        <file alias="lobster_font">res/fonts/Lobster-Regular.ttf</file>
+
+        <file alias="load_gif_dark">res/gifs/load_dark.gif</file>
+        <file alias="load_gif_light">res/gifs/load_light.gif</file>
+
+        <file alias="arrow_down_big_dark_icon">res/icons/arrow_down_big_dark.png</file>
+        <file alias="arrow_down_big_dark_disabled_icon">res/icons/arrow_down_big_dark_disabled.png</file>
+        <file alias="arrow_down_big_light_icon">res/icons/arrow_down_big_light.png</file>
+        <file alias="arrow_down_big_light_disabled_icon">res/icons/arrow_down_big_light_disabled.png</file>
+        <file alias="arrow_down_small_icon">res/icons/arrow_down_small.png</file>
+        <file alias="arrow_right_small_icon">res/icons/arrow_right_small.png</file>
+        <file alias="arrow_up_big_dark_icon">res/icons/arrow_up_big_dark.png</file>
+        <file alias="arrow_up_big_dark_disabled_icon">res/icons/arrow_up_big_dark_disabled.png</file>
+        <file alias="arrow_up_big_light_icon">res/icons/arrow_up_big_light.png</file>
+        <file alias="arrow_up_big_light_disabled_icon">res/icons/arrow_up_big_light_disabled.png</file>
+        <file alias="dark_theme_icon">res/icons/dark_theme_icon.png</file>
+        <file alias="light_theme_icon">res/icons/light_theme_icon.png</file>
+
+        <file alias="evil_fresco_image">res/images/evil_fresco.png</file>
+        <file alias="good_fresco_image">res/images/good_fresco.png</file>
+        <file alias="shot_hole_image">res/images/shot_hole.png</file>
+
+        <file alias="empty_sound">res/sounds/empty.wav</file>
+        <file alias="shot_sound">res/sounds/shot.wav</file>
+        <file alias="spin_sound">res/sounds/spin.wav</file>
+
+        <file alias="dark_theme">res/styles/dark.qss</file>
+        <file alias="light_theme">res/styles/light.qss</file>
+
+        <file alias="data_upload_ui">res/ui/data_upload.ui</file>
+        <file alias="fresco_ui">res/ui/fresco.ui</file>
+    </qresource>
+</RCC>
