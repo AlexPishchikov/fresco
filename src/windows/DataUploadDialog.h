@@ -1,5 +1,6 @@
 #include <QComboBox>
 #include <QDialog>
+#include <QJsonObject>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMovie>
@@ -14,10 +15,12 @@ class DataUploadDialog : public QDialog {
     public:
         DataUploadDialog(QWidget *parent = nullptr);
     private:
-        // DataUploadConfig config;
         Ui::DataUploadUi ui;
 
+        QJsonObject config;
+
         QMovie loading_gif;
+
         QString current_theme;
 
         void init_cached_tables_dir() const;
@@ -36,9 +39,7 @@ class DataUploadDialog : public QDialog {
 
         QString get_sheet_id_from_url(const QString &url) const;
 
-        QString get_table_id_from_file(const QString &filename) const;
-
-        QString get_sheet_id_from_file(const QString &filename) const;
+        QString get_url_from_file(const QString &filename) const;
 
         bool is_correct_url() const;
 

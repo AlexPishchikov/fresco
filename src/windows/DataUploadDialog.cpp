@@ -23,13 +23,13 @@
 
 #include "DataUploadDialog.h"
 #include "../../ui_data_upload.h"
-// #include "../config_load/DataUploadDialogConfig.h"
+#include "../load_config/load_config.h"
 // #include "../windows/FrescoWindow.h"
 #include "../workers/DownloadWorker.h"
 
 
 DataUploadDialog::DataUploadDialog(QWidget *parent) : QDialog(parent) {
-    // this->config = &DataUploadDialogConfig();
+    this->config = load_config("res/default_config/DataUploadingDialogConfig.json");
 
     this->init_cached_tables_dir();
 
@@ -58,13 +58,13 @@ DataUploadDialog::DataUploadDialog(QWidget *parent) : QDialog(parent) {
 }
 
 void DataUploadDialog::init_cached_tables_dir() const {
-    if (!QFileInfo::exists("uploaded_tables")) {
-        QDir().mkdir("uploaded_tables");
+    if (!QFileInfo::exists(this->config["data_uploading_folder_name"].toString())) {
+        QDir().mkdir(this->config["data_uploading_folder_name"].toString());
     }
 }
 
 QStringList DataUploadDialog::get_tables_list() const {
-    QFile tables_list_file("uploaded_tables/tables_list");
+    QFile tables_list_file(this->config["data_uploading_folder_name"].toString() + "/tables_list");
     tables_list_file.open(QFile::ReadOnly);
 
     QStringList tables_list;
@@ -78,12 +78,12 @@ QStringList DataUploadDialog::get_tables_list() const {
 }
 
 void DataUploadDialog::fill_combo_box() {
-    const QDir tables_folder("uploaded_tables/");
+    const QDir tables_folder(this->config["data_uploading_folder_name"].toString());
     const QStringList files_list = tables_folder.entryList(QStringList() << "*.csv", QDir::Files);
-    const QStringList tables_list = get_tables_list(); 
-    for (int i = 0; i < files_list.size(); i++) {
-        if (tables_list.contains(files_list[i])) {
-            this->ui.tables_combo_box->addItem(files_list[i]);
+    const QStringList tables_list = get_tables_list();
+    for (QString filename : files_list) {
+        if (tables_list.contains(filename)) {
+            this->ui.tables_combo_box->addItem(filename);
         }
     }
 }
@@ -109,15 +109,11 @@ void DataUploadDialog::load_table_from_cache() {
         return;
     }
 
-    const QString url = QString("https://docs.google.com/spreadsheets/d/%1/edit#gid=%2")
-                                .arg(this->get_sheet_id_from_file(this->ui.tables_combo_box->currentText()))
-                                .arg(this->get_table_id_from_file(this->ui.tables_combo_box->currentText()));
-    this->ui.url_line_edit->setText(url);
+    this->ui.url_line_edit->setText(this->get_url_from_file(this->ui.tables_combo_box->currentText()));
     this->load_table_by_url(true);
 }
 
 void DataUploadDialog::load_table_by_url(const bool cache) {
-    // this->ui.status_label->setText("");
     this->switch_widgets_status();
     this->run_loading_gif();
 
@@ -163,16 +159,22 @@ QString DataUploadDialog::get_sheet_id_from_url(const QString &url) const {
     return url.split('=')[1];
 }
 
-QString DataUploadDialog::get_table_id_from_file(const QString &filename) const {
-    // QStringList tables_list = DataUploadDialog::get_tables_list();
-    // return DataUploadDialog::get_table_id_from_url(tables_list[filename]);
-    return QString();
-}
+QString DataUploadDialog::get_url_from_file(const QString &filename) const {
+    const int line_index = get_tables_list().indexOf(filename);
 
-QString DataUploadDialog::get_sheet_id_from_file(const QString &filename) const {
-    // QStringList tables_list = DataUploadDialog::get_tables_list();
-    // return DataUploadDialog::get_sheet_id_from_url(tables_list[filename]);
-    return QString();
+    QFile tables_list_file(this->config["data_uploading_folder_name"].toString() + "/tables_list");
+    tables_list_file.open(QFile::ReadOnly);
+
+    QString line;
+    int current_line_index = 0;
+    while (!tables_list_file.atEnd()) {
+        QString current_line = tables_list_file.readLine();
+        if (current_line_index == line_index) {
+            line = current_line;
+            break;
+        }
+    }
+    return line.split(' ').last();
 }
 
 bool DataUploadDialog::is_correct_url() const {
