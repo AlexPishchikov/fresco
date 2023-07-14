@@ -12,14 +12,18 @@ QJsonObject load_config(const QString &default_config_path) {
     QJsonObject config = QJsonDocument::fromJson(default_config.readAll()).object();
 
     QFile custom_config_file("config.json");
-    custom_config_file.open(QFile::ReadOnly);
+    if (!custom_config_file.exists()) {
+        custom_config_file.open(QFile::ReadOnly);
 
-    QJsonObject custom_config = QJsonDocument::fromJson(custom_config_file.readAll()).object();
+        QJsonObject custom_config = QJsonDocument::fromJson(custom_config_file.readAll()).object();
 
-    const QStringList keys = custom_config.keys();
+        const QStringList keys = custom_config.keys();
 
-    for (QString key : keys) {
-        config.insert(key, custom_config[key]);
+        for (const QString &key : keys) {
+            if (custom_config[key].type() == config[key].type()) {
+                config.insert(key, custom_config[key]);
+            }
+        }
     }
 
     return config;

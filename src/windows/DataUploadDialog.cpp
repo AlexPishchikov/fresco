@@ -81,7 +81,7 @@ void DataUploadDialog::fill_combo_box() {
     const QDir tables_folder(this->config["data_uploading_folder_name"].toString());
     const QStringList files_list = tables_folder.entryList(QStringList() << "*.csv", QDir::Files);
     const QStringList tables_list = get_tables_list();
-    for (QString filename : files_list) {
+    for (const QString &filename : files_list) {
         if (tables_list.contains(filename)) {
             this->ui.tables_combo_box->addItem(filename);
         }
@@ -168,11 +168,13 @@ QString DataUploadDialog::get_url_from_file(const QString &filename) const {
     QString line;
     int current_line_index = 0;
     while (!tables_list_file.atEnd()) {
-        QString current_line = tables_list_file.readLine();
+        const QString current_line = tables_list_file.readLine();
         if (current_line_index == line_index) {
             line = current_line;
+            line.chop(1);
             break;
         }
+        current_line_index++;
     }
     return line.split(' ').last();
 }
