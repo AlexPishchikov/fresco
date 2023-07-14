@@ -13,13 +13,12 @@
 #include <QPoint>
 #include <QPushButton>
 #include <QRadialGradient>
+#include <QRegularExpression>
+#include <QRegularExpressionMatch>
 #include <QString>
 #include <QStringList>
 #include <QThreadPool>
 #include <QWidget>
-
-#include <future>
-#include <thread>
 
 #include "DataUploadDialog.h"
 #include "../../ui_data_upload.h"
@@ -128,25 +127,9 @@ void DataUploadDialog::load_table_by_url(const bool cache) {
 
     const QString load_table_url = QString("https://docs.google.com/spreadsheets/d/%1/export?format=csv&id=%1&gid=%2").arg(table_id, sheet_id);
 
-    // QThread thread;
     static DownloadWorker worker;
-    // worker.moveToThread(&thread);
-    // thread.start();
-
-    // auto f = std::async(std::launch::async, [=]{worker.download(load_table_url);});
-
-
-    // worker.signals.finished.connect([=]{this->process_downloaded_table(this->ui.url_line_edit->text(), worker.result, cache};))
-    // connect(worker, &DownloadWorker::finished, this, [=]{this->process_downloaded_table(this->ui.url_line_edit->text(), worker.result, cache)};)
-    // threadpool.start([=]{worker.download(load_table_url);});
-
+    connect(&worker, &DownloadWorker::finished, this, [=]{this->process_downloaded_table(cache);});
     worker.download(load_table_url);
-    // connect(threadpool, &QThreadPool::start, this, [=]{worker.download(load_table_url);});
-    // QThreadPool::globalInstance()->start([=]{worker.download(load_table_url);});
-    // qDebug() << "sdf";
-
-    // f.wait();
-    // qDebug() << "sdf2";
 
 }
 
@@ -189,12 +172,14 @@ bool DataUploadDialog::is_correct_url() const {
 }
 
 bool DataUploadDialog::is_url() const {
-    // regex = re.compile(r'^(?:https://|http://)?(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?))|(?:/?|[/?]\S+)$', re.IGNORECASE)
-    // return re.match(regex, self.url_line_edit.text()) is not None
-    return true;
+    QRegularExpression regex("^(?:https://|http://)?(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?))|(?:/?|[/?]\S+)$");
+    QRegularExpressionMatch url = regex.match(this->ui.url_line_edit->text());
+    return url.hasMatch();
 }
 
-void DataUploadDialog::process_downloaded_table(const QString &table_url, const int response, const bool cache) {
+void DataUploadDialog::process_downloaded_table(const bool cache) {
+    qDebug() << "sdf";
+
     // if response == None:
     //     if not cache:
     //         self.status_label.setText('Нет интернета')

@@ -45,7 +45,7 @@ class DataUploadDialog : public QDialog {
 
         bool is_url() const;
 
-        void process_downloaded_table(const QString &table_url, const int response, const bool cache);
+        void process_downloaded_table(const bool cache);
 
         bool check_table_structure(const QString &file_path) const;
 

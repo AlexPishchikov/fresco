@@ -3,17 +3,18 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QObject>
-#include <QRunnable>
 #include <QScopedPointer>
 #include <QScopedPointerDeleteLater>
 
 class DownloadWorker : public QObject {
+    Q_OBJECT
+    signals:
+        void finished();
     public:
         DownloadWorker();
-        int download(const QString &load_table_url);
-        void download_finished() const;
-        void download_read() const;
+        void download(const QString &load_table_url);
     private:
+        void download_finished();
         QNetworkAccessManager manager;
         QScopedPointer<QNetworkReply, QScopedPointerDeleteLater> reply;
 };
