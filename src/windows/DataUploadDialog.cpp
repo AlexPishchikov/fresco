@@ -21,7 +21,7 @@
 #include <QWidget>
 
 #include "DataUploadDialog.h"
-#include "../../ui_data_upload.h"
+#include "../../build/ui/ui_data_upload.h"
 #include "../load_config/load_config.h"
 // #include "../windows/FrescoWindow.h"
 #include "../workers/DownloadWorker.h"

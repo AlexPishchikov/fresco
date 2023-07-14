@@ -9,7 +9,7 @@
 #include <QStringList>
 #include <QWidget>
 
-#include "../../ui_data_upload.h"
+#include "../../build/ui/ui_data_upload.h"
 
 class DataUploadDialog : public QDialog {
     public:
