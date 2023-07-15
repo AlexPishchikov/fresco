@@ -7,11 +7,13 @@
 
 #include "DownloadWorker.h"
 
-QString DownloadWorker::get_filename() const {
-    return this->filename;
+QString DownloadWorker::get_file_path() const {
+    return this->file_path;
 }
 
 void DownloadWorker::download(const QString &load_table_url, const QString &save_path) {
+    this->file_path = "";
+
     QNetworkRequest request = QNetworkRequest(load_table_url);
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, true);
     this->reply.reset(this->manager.get(request));
@@ -24,11 +26,14 @@ void DownloadWorker::download_finished(const QString &save_path) {
     QMimeData data;
     data.setData("text/uri-list", this->reply->header(QNetworkRequest::ContentDispositionHeader).toByteArray());
 
-    this->filename = data.text().split('\'').last().remove(QRegExp("%([A-F0-9]{2})"));
+    const QString filename = data.text().split('\'').last().remove(QRegExp("%([A-F0-9]{2})"));
 
-    QFile table(save_path + this->filename);
-    table.open(QFile::WriteOnly);
-    table.write(this->reply->readAll());
+    if (filename != "") {
+        this->file_path = save_path + filename;
+        QFile table(this->file_path);
+        table.open(QFile::WriteOnly);
+        table.write(this->reply->readAll());
+    }
 
     emit finished();
 }

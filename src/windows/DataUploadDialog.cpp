@@ -116,12 +116,12 @@ void DataUploadDialog::load_table_from_cache() {
 }
 
 void DataUploadDialog::load_table_by_url(const bool cache) {
-    this->switch_widgets_status();
+    this->set_widgets_enabled(false);
     this->run_loading_gif();
 
     if (!this->is_correct_url()) {
         this->ui.status_label->setText(QString("Некорректная ссылка"));
-        this->switch_widgets_status();
+        this->set_widgets_enabled(true);
         return;
     }
 
@@ -154,8 +154,7 @@ QString DataUploadDialog::get_url_from_file(const QString &filename) const {
     while (!tables_list_file.atEnd()) {
         const QString current_line = tables_list_file.readLine();
         if (current_line_index == line_index) {
-            line = current_line;
-            line.chop(1);
+            line = current_line.simplified();
             break;
         }
         current_line_index++;
@@ -179,61 +178,45 @@ bool DataUploadDialog::is_url() const {
 }
 
 void DataUploadDialog::update_cache(const bool cache) {
-    qDebug() << this->worker.get_filename();
+    if (this->worker.get_file_path() == "") {
+        if (cache) {
+            QFile tables_list_file(this->config["data_uploading_folder_name"].toString() + ".tables_list");
+            tables_list_file.open(QFile::ReadOnly);
 
-    // if response == None:
-    //     if not cache:
-    //         self.status_label.setText('Нет интернета')
-    //         self.switch_widgets_status()
-    //         return
-    //     else:
-    //         filename = list(self.get_tables_list())[list(self.get_tables_list().values()).index(table_url)]
-    //         data_file_name = f'{self.config.upload_data_folder_name}/{filename}'
-    //         self.switch_widgets_status()
-    // else:
-    //     try:
-    //         data_file_name = f'{self.config.upload_data_folder_name}/' + urllib.parse.unquote(response.headers["Content-Disposition"].split("; filename*=UTF-8''")[-1])
-    //     except KeyError:
-    //         if cache:
-    //             filename = list(self.get_tables_list())[list(self.get_tables_list().values()).index(table_url)]
-    //             data_file_name = f'{self.config.upload_data_folder_name}/{filename}'
-    //             self.switch_widgets_status()
-    //         else:
-    //             self.status_label.setText('Не удалось загрузить по ссылке')
-    //             self.switch_widgets_status()
-    //             return
-    //     if response.status_code == 200:
-    //         if not os.path.exists(self.config.upload_data_folder_name):
-    //             os.mkdir(self.config.upload_data_folder_name)
-    //         if not os.path.exists(f'{self.config.upload_data_folder_name}tables_list'):
-    //             with open(f'{self.config.upload_data_folder_name}tables_list', 'x') as _:
-    //                 pass
-    //         with open(data_file_name, 'w') as table_file:
-    //             table_file.write(response.content.decode('utf-8'))
-
-    //         tables_list = self.get_tables_list()
-
-    //         tables_list[data_file_name.split('/')[-1]] = self.url_line_edit.text()
-    //         with open(f'{self.config.upload_data_folder_name}tables_list', 'w') as tables_list_file:
-    //             for name in tables_list:
-    //                 tables_list_file.write(f'{name} {tables_list[name]}\n')
-    //     elif not cache:
-    //         self.status_label.setText('Не удалось загрузить по ссылке')
-    //         self.switch_widgets_status()
-    //         return
-
-    // if self.check_table_structure(data_file_name):
-    //     self.show_main_window(data_file_name)
-    // else:
-    //     self.status_label.setText('Некорректная структура таблицы')
-    //     os.remove(data_file_name)
-    //     tables_list = self.get_tables_list()
-    //     with open(f'{self.config.upload_data_folder_name}tables_list', 'w') as tables_list_file:
-    //         tables_list.pop(data_file_name.split('/')[-1])
-    //         for name in tables_list:
-    //             tables_list_file.write(f'{name} {tables_list[name]}\n')
-    //     self.switch_widgets_status()
-    //     return
+            while (!tables_list_file.atEnd()) {
+                const QString current_line = tables_list_file.readLine();
+                if (current_line.split(' ').last().simplified() == this->ui.url_line_edit->text().simplified()) {
+                    QStringList filename = current_line.split(' ');
+                    filename.pop_back();
+                    this->show_fresco_window(this->config["data_uploading_folder_name"].toString() + filename.join(' '));
+                }
+            }
+        }
+        else {
+            this->ui.status_label->setText("Не удалось загрузить по ссылке");
+            this->set_widgets_enabled(true);
+        }
+    }
+    else {
+        if (check_table_structure(this->worker.get_file_path())) {
+            if (cache) {
+                this->show_fresco_window(this->worker.get_file_path());
+            }
+            else {
+                if (!get_tables_list().contains(this->worker.get_file_path().split('/').last())) {
+                    QFile tables_list_file(this->config["data_uploading_folder_name"].toString() + ".tables_list");
+                    tables_list_file.open(QFile::Append);
+                    tables_list_file.write((this->worker.get_file_path().split('/').last() + ' ' + this->ui.url_line_edit->text().simplified() + '\n').toUtf8());
+                }
+                this->show_fresco_window(this->worker.get_file_path());
+            }
+        }
+        else {
+            this->ui.status_label->setText("Некорректная структура таблицы");
+            QFile::remove(this->worker.get_file_path());
+            this->set_widgets_enabled(true);
+        }
+    }
 }
 
 bool DataUploadDialog::check_table_structure(const QString &file_path) const {
@@ -242,7 +225,7 @@ bool DataUploadDialog::check_table_structure(const QString &file_path) const {
     table_file.readLine();
     const QString line = table_file.readLine();
 
-    return line.split(',').contains("Промежуточный рейтинг");
+    return line.split(',').contains(this->config["data_uploading_rating_col_name"].toString());
 }
 
 void DataUploadDialog::show_fresco_window(const QString &data_file_name) {
@@ -256,12 +239,12 @@ void DataUploadDialog::run_loading_gif() {
     this->loading_gif.start();
 }
 
-void DataUploadDialog::switch_widgets_status() {
-    this->ui.url_line_edit->setEnabled(!this->ui.url_line_edit->isEnabled());
-    this->ui.load_from_url_button->setEnabled(!this->ui.load_from_url_button->isEnabled());
-    this->ui.load_from_file_button->setEnabled(!this->ui.load_from_file_button->isEnabled());
-    this->ui.load_from_folder_button->setEnabled(!this->ui.load_from_folder_button->isEnabled());
-    this->ui.switch_theme_button->setEnabled(!this->ui.switch_theme_button->isEnabled());
+void DataUploadDialog::set_widgets_enabled(const bool status) {
+    this->ui.url_line_edit->setEnabled(status);
+    this->ui.load_from_url_button->setEnabled(status);
+    this->ui.load_from_file_button->setEnabled(status);
+    this->ui.load_from_folder_button->setEnabled(status);
+    this->ui.switch_theme_button->setEnabled(status);
 }
 
 void DataUploadDialog::switch_theme(const QString &theme) {

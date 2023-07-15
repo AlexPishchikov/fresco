@@ -53,7 +53,7 @@ class DataUploadDialog : public QDialog {
 
         void run_loading_gif();
 
-        void switch_widgets_status();
+        void set_widgets_enabled(const bool status);
 
         void switch_theme(const QString &theme);
 };

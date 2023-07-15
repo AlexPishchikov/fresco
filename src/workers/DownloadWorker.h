@@ -13,10 +13,10 @@ class DownloadWorker : public QObject {
     signals:
         void finished();
     public:
+        QString get_file_path() const;
         void download(const QString &load_table_url, const QString &save_path);
-        QString get_filename() const;
     private:
-        QString filename = "";
+        QString file_path;
 
         QNetworkAccessManager manager;
 
