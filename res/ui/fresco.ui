@@ -353,7 +353,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="switch_palette_button">
+           <widget class="QPushButton" name="switch_theme_button">
             <property name="maximumSize">
              <size>
               <width>22</width>

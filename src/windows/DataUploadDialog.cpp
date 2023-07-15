@@ -16,9 +16,8 @@
 #include <QWidget>
 
 #include "DataUploadDialog.h"
-#include "../../build/ui/ui_data_upload.h"
+#include "FrescoWindow.h"
 #include "../load_config/load_config.h"
-// #include "../windows/FrescoWindow.h"
 #include "../workers/DownloadWorker.h"
 
 
@@ -230,7 +229,8 @@ bool DataUploadDialog::check_table_structure(const QString &file_path) const {
 
 void DataUploadDialog::show_fresco_window(const QString &data_file_name) {
     this->close();
-    // FrescoWindow(data_file_name, this->config.rating_col_name, this->current_theme).show();
+    static FrescoWindow fresco_window(data_file_name, this->config["data_uploading_rating_col_name"].toString(), this->current_theme);
+    fresco_window.show();
 }
 
 void DataUploadDialog::run_loading_gif() {

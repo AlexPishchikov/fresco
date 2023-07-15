@@ -1,5 +1,5 @@
 INCLUDEPATH += .
-TARGET = ../fresco
+TARGET = fresco
 TEMPLATE = app
 
 MOC_DIR = build/moc
@@ -13,12 +13,14 @@ FORMS += res/ui/data_upload.ui \
 
 HEADERS += src/load_config/load_config.h \
            src/workers/DownloadWorker.h \
-           src/windows/DataUploadDialog.h
+           src/windows/DataUploadDialog.h \
+           src/windows/FrescoWindow.h
 
 SOURCES += main.cpp \
            src/load_config/load_config.cpp \
            src/workers/DownloadWorker.cpp \
-           src/windows/DataUploadDialog.cpp
+           src/windows/DataUploadDialog.cpp \
+           src/windows/FrescoWindow.cpp
 
 RESOURCES += fresco.qrc
 
