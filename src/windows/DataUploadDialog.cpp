@@ -1,15 +1,11 @@
 #include <QColor>
-#include <QComboBox>
 #include <QDialog>
 #include <QDir>
-#include <QDirIterator>
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QGraphicsOpacityEffect>
-#include <QLabel>
-#include <QLineEdit>
-#include <QMovie>
+#include <QJsonValue>
 #include <QPoint>
 #include <QPushButton>
 #include <QRadialGradient>
@@ -17,7 +13,6 @@
 #include <QRegularExpressionMatch>
 #include <QString>
 #include <QStringList>
-#include <QThreadPool>
 #include <QWidget>
 
 #include "DataUploadDialog.h"
@@ -29,6 +24,9 @@
 
 DataUploadDialog::DataUploadDialog(QWidget *parent) : QDialog(parent) {
     this->config = load_config("res/default_config/DataUploadingDialogConfig.json");
+    if (this->config["data_uploading_folder_name"].toString().at(-1) != '/') {
+        this->config["data_uploading_folder_name"] = QJsonValue(this->config["data_uploading_folder_name"].toString() + '/');
+    }
 
     this->init_cached_tables_dir();
 
@@ -60,10 +58,15 @@ void DataUploadDialog::init_cached_tables_dir() const {
     if (!QFileInfo::exists(this->config["data_uploading_folder_name"].toString())) {
         QDir().mkdir(this->config["data_uploading_folder_name"].toString());
     }
+
+    if (!QFileInfo::exists(this->config["data_uploading_folder_name"].toString() + ".tables_list")) {
+        QFile tables_list_file(this->config["data_uploading_folder_name"].toString() + ".tables_list");
+        tables_list_file.open(QFile::WriteOnly);
+    }
 }
 
 QStringList DataUploadDialog::get_tables_list() const {
-    QFile tables_list_file(this->config["data_uploading_folder_name"].toString() + "/tables_list");
+    QFile tables_list_file(this->config["data_uploading_folder_name"].toString() + ".tables_list");
     tables_list_file.open(QFile::ReadOnly);
 
     QStringList tables_list;
@@ -127,10 +130,8 @@ void DataUploadDialog::load_table_by_url(const bool cache) {
 
     const QString load_table_url = QString("https://docs.google.com/spreadsheets/d/%1/export?format=csv&id=%1&gid=%2").arg(table_id, sheet_id);
 
-    static DownloadWorker worker;
-    connect(&worker, &DownloadWorker::finished, this, [=]{this->process_downloaded_table(cache);});
-    worker.download(load_table_url);
-
+    connect(&this->worker, &DownloadWorker::finished, this, [=]{this->update_cache(cache);});
+    this->worker.download(load_table_url, this->config["data_uploading_folder_name"].toString());
 }
 
 QString DataUploadDialog::get_table_id_from_url(const QString &url) const {
@@ -145,7 +146,7 @@ QString DataUploadDialog::get_sheet_id_from_url(const QString &url) const {
 QString DataUploadDialog::get_url_from_file(const QString &filename) const {
     const int line_index = get_tables_list().indexOf(filename);
 
-    QFile tables_list_file(this->config["data_uploading_folder_name"].toString() + "/tables_list");
+    QFile tables_list_file(this->config["data_uploading_folder_name"].toString() + ".tables_list");
     tables_list_file.open(QFile::ReadOnly);
 
     QString line;
@@ -177,8 +178,8 @@ bool DataUploadDialog::is_url() const {
     return url.hasMatch();
 }
 
-void DataUploadDialog::process_downloaded_table(const bool cache) {
-    qDebug() << "sdf";
+void DataUploadDialog::update_cache(const bool cache) {
+    qDebug() << this->worker.get_filename();
 
     // if response == None:
     //     if not cache:
@@ -204,8 +205,8 @@ void DataUploadDialog::process_downloaded_table(const bool cache) {
     //     if response.status_code == 200:
     //         if not os.path.exists(self.config.upload_data_folder_name):
     //             os.mkdir(self.config.upload_data_folder_name)
-    //         if not os.path.exists(f'{self.config.upload_data_folder_name}/tables_list'):
-    //             with open(f'{self.config.upload_data_folder_name}/tables_list', 'x') as _:
+    //         if not os.path.exists(f'{self.config.upload_data_folder_name}tables_list'):
+    //             with open(f'{self.config.upload_data_folder_name}tables_list', 'x') as _:
     //                 pass
     //         with open(data_file_name, 'w') as table_file:
     //             table_file.write(response.content.decode('utf-8'))
@@ -213,7 +214,7 @@ void DataUploadDialog::process_downloaded_table(const bool cache) {
     //         tables_list = self.get_tables_list()
 
     //         tables_list[data_file_name.split('/')[-1]] = self.url_line_edit.text()
-    //         with open(f'{self.config.upload_data_folder_name}/tables_list', 'w') as tables_list_file:
+    //         with open(f'{self.config.upload_data_folder_name}tables_list', 'w') as tables_list_file:
     //             for name in tables_list:
     //                 tables_list_file.write(f'{name} {tables_list[name]}\n')
     //     elif not cache:
@@ -227,7 +228,7 @@ void DataUploadDialog::process_downloaded_table(const bool cache) {
     //     self.status_label.setText('Некорректная структура таблицы')
     //     os.remove(data_file_name)
     //     tables_list = self.get_tables_list()
-    //     with open(f'{self.config.upload_data_folder_name}/tables_list', 'w') as tables_list_file:
+    //     with open(f'{self.config.upload_data_folder_name}tables_list', 'w') as tables_list_file:
     //         tables_list.pop(data_file_name.split('/')[-1])
     //         for name in tables_list:
     //             tables_list_file.write(f'{name} {tables_list[name]}\n')

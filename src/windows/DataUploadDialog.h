@@ -1,20 +1,20 @@
-#include <QComboBox>
 #include <QDialog>
 #include <QJsonObject>
-#include <QLabel>
-#include <QLineEdit>
 #include <QMovie>
-#include <QPushButton>
 #include <QString>
 #include <QStringList>
 #include <QWidget>
 
 #include "../../build/ui/ui_data_upload.h"
+#include "../workers/DownloadWorker.h"
+
 
 class DataUploadDialog : public QDialog {
     public:
         DataUploadDialog(QWidget *parent = nullptr);
     private:
+        DownloadWorker worker;
+
         Ui::DataUploadUi ui;
 
         QJsonObject config;
@@ -45,7 +45,7 @@ class DataUploadDialog : public QDialog {
 
         bool is_url() const;
 
-        void process_downloaded_table(const bool cache);
+        void update_cache(const bool cache);
 
         bool check_table_structure(const QString &file_path) const;
 
