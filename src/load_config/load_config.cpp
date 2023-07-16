@@ -12,7 +12,7 @@ QJsonObject load_config(const QString &default_config_path) {
     QJsonObject config = QJsonDocument::fromJson(default_config.readAll()).object();
 
     QFile custom_config_file("config.json");
-    if (!custom_config_file.exists()) {
+    if (custom_config_file.exists()) {
         custom_config_file.open(QFile::ReadOnly);
 
         QJsonObject custom_config = QJsonDocument::fromJson(custom_config_file.readAll()).object();

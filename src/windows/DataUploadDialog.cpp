@@ -221,10 +221,11 @@ void DataUploadDialog::update_cache(const bool cache) {
 bool DataUploadDialog::check_table_structure(const QString &file_path) const {
     QFile table_file(file_path);
     table_file.open(QFile::ReadOnly);
-    table_file.readLine();
-    const QString line = table_file.readLine();
+    const QString line1 = table_file.readLine();
+    const QString line2 = table_file.readLine();
 
-    return line.split(',').contains(this->config["data_uploading_rating_col_name"].toString());
+    return line1.split(',').contains(this->config["data_uploading_rating_col_name"].toString()) ||
+           line2.split(',').contains(this->config["data_uploading_rating_col_name"].toString());
 }
 
 void DataUploadDialog::show_fresco_window(const QString &data_file_name) {

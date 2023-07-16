@@ -1,7 +1,8 @@
-#include <QChar>
+#include <QHash>
 #include <QJsonObject>
 #include <QMainWindow>
 #include <QString>
+#include <QStringList>
 
 #include "../../build/ui/ui_fresco.h"
 
@@ -12,13 +13,23 @@ class FrescoWindow : public QMainWindow {
     private:
         Ui::FrescoWindowUi ui;
 
+        QHash<QString, int> rating_by_name;
+
         QJsonObject config;
 
         QString current_theme;
 
+        QString questions_file_path;
+
+        QStringList questions_list;
+
+        void init_ui();
+
+        void create_connections();
+
         void parse_csv(const QString &file_name, const QString &rating_col_name);
 
-        void add_student_to_combo_box(const QString &name, const double rating);
+        void add_student_to_combo_box(const QString &name, const int rating);
 
         void set_time_label();
 
@@ -30,7 +41,7 @@ class FrescoWindow : public QMainWindow {
 
         void select_questons_file();
 
-        void import_questions_from_TeX(const QString &file_path);
+        void import_questions_from_TeX();
 
         void set_evil_style();
 
@@ -42,7 +53,7 @@ class FrescoWindow : public QMainWindow {
 
         void show_roulette_dialog();
 
-        void closeEvent();
+        // void closeEvent();
         // void closeEvent(event);
 
         void clear();
@@ -51,7 +62,7 @@ class FrescoWindow : public QMainWindow {
 
         bool is_name(const QString &name) const;
 
-        double calculate_time(const double rating) const;
+        double calculate_time(const int rating) const;
 
-        QChar last_letter(const double rating) const;
+        QString last_letter(const int rating) const;
 };
