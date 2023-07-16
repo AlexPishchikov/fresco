@@ -1,3 +1,8 @@
+#include <algorithm>
+#include <chrono>
+#include <random>
+
+#include <QColor>
 #include <QFont>
 #include <QFontDatabase>
 #include <QFile>
@@ -78,9 +83,9 @@ void FrescoWindow::create_connections() {
     connect(this->ui.roulette_button, &QPushButton::clicked, this, [=]{this->show_roulette_dialog();});
     connect(this->ui.select_questions_file_button, &QPushButton::clicked, this, [=]{this->select_questons_file();});
     connect(this->ui.start_timer_button, &QPushButton::clicked, this, [=]{this->start_timer();});
+    // connect(this->stop_timer_button, &QPushButton::clicked, this, [=]{this->remaining_time_timer.stop();});
 
     connect(this->ui.cells_count_spin_box, QOverload<int>::of(&QSpinBox::valueChanged), this, [=]{this->cells_count_spin_box_changed();});
-    // connect(this->stop_timer_button, &QPushButton::clicked, this, [=]{this->remaining_time_timer.stop();});
 }
 
 void FrescoWindow::parse_csv(const QString &data_file_path, const QString &rating_col_name) {
@@ -109,63 +114,75 @@ void FrescoWindow::set_time_label() {}
     // self.total_time = self.calculate_time(self.rating[self.name_combo_box.currentText()])
     // self.total_time_label.setText(f'{self.total_time} секунд{self.last_letter(self.total_time)}')
 
-void FrescoWindow::set_question_label(const QString &question) {}
-    // if len(self.questions) == 0:
-    //     self.question_label.setText(self.config.question_placeholder)
-    //     return
-
-    // self.question_label.setText(self.questions.pop())
-    // self.questions_count_label.setText(f'Осталось вопросов: {len(self.questions)}')
+void FrescoWindow::set_question_label() {
+    if (this->questions_list.empty()) {
+        this->ui.question_label->setText(this->config["fresco_question_placeholder"].toString());
+        return;
+    }
+    this->ui.question_label->setText(this->questions_list.takeLast());
+    this->ui.questions_count_label->setText(QString("Осталось вопросов: %1").arg(this->questions_list.size()));
+}
 
 void FrescoWindow::init_remaining_time_label() {}
     // self.remaining_time_label.setText(f'{self.total_time}{"." if self.time_label_len > 0 else ""}{"0" * self.time_label_len}')
 
-void FrescoWindow::generate_riddle() {}
-    // current_name = self.name_combo_box.currentText()
-    // if self.name_combo_box.findText(current_name, Qt.MatchExactly) == -1:
-    //     self.add_student_to_combo_box(current_name, self.config.custom_student_rating)
-    //     self.name_combo_box.setCurrentIndex(self.name_combo_box.count() - 1)
+void FrescoWindow::generate_riddle() {
+    const QString current_name = this->ui.name_combo_box->currentText();
+    if (current_name == this->config["fresco_name_combo_box_placeholder"].toString()) {
+        return;
+    }
 
+    if (this->ui.name_combo_box->findText(current_name, Qt::MatchExactly) == -1) {
+        this->add_student_to_combo_box(current_name, this->config["fresco_custom_student_rating"].toInt());
+        this->ui.name_combo_box->setCurrentIndex(this->ui.name_combo_box->count() - 1);
+    }
     // try:
     //     self.rating[self.name_combo_box.currentText()]
     // except KeyError:
     //     self.rating[self.name_combo_box.currentText()] = self.config.custom_student_rating
 
-    // if current_name != self.config.name_combo_box_placeholder:
-    //     icon = QPixmap(self.name_combo_box.size().height(), self.name_combo_box.size().height())
-    //     icon.fill(QColor(self.config.name_icon_color))
-    //     self.name_combo_box.setItemData(self.name_combo_box.currentIndex(), icon, Qt.DecorationRole)
-    //     self.set_time_label()
-    //     self.set_question_label()
-    //     self.remaining_time_timer.stop()
-    //     self.init_remaining_time_label()
-    //     self.img_label.setPixmap(self.good_fresco)
-    //     self.const_upper_label.show()
-    //     self.const_lower_label.show()
-    //     self.remaining_time_label.show()
-    //     self.total_time_label.show()
-    //     self.question_label.show()
-    //     self.setWindowTitle(f'{self.config.window_title} ~ {current_name}')
+    QPixmap icon(this->ui.name_combo_box->size().height(), this->ui.name_combo_box->size().height());
+    icon.fill(QColor(this->config["fresco_name_icon_color"].toString()));
+    this->ui.name_combo_box->setItemData(this->ui.name_combo_box->currentIndex(), icon, Qt::DecorationRole);
+    // self.set_time_label()
+    this->set_question_label();
+    // self.remaining_time_timer.stop()
+    // self.init_remaining_time_label()
+    this->ui.img_label->setPixmap(QPixmap(":good_fresco_image"));
+    this->ui.const_upper_label->show();
+    this->ui.const_lower_label->show();
+    // self.remaining_time_label.show()
+    // self.total_time_label.show()
+    this->ui.question_label->show();
+    this->setWindowTitle(QString("%1 ~ %2").arg(this->config["fresco_window_title"].toString()).arg(current_name));
+}
 
 void FrescoWindow::select_questons_file() {
-    this->questions_file_path = QFileDialog::getOpenFileName(this, "Выбрать файл с вопросами", ".", "TeX(*.tex);;");
+    const QString questions_file_path = QFileDialog::getOpenFileName(this, "Выбрать файл с вопросами", ".", "TeX(*.tex);;");
     if (questions_file_path == "") {
         return;
     }
+    this->questions_file_path = questions_file_path;
     this->import_questions_from_TeX();
 }
 
 void FrescoWindow::import_questions_from_TeX() {
-    this->questions_list = QStringList();
+    if (this->questions_file_path == "") {
+        return;
+    }
 
     QFile questions_file(this->questions_file_path);
     questions_file.open(QFile::ReadOnly);
-    questions_file.readLine();
+
+    this->questions_list = QStringList();
     while (!questions_file.atEnd()) {
         const QString line = questions_file.readLine();
         this->questions_list.append(line.split('%')[0].simplified().replace("$", ""));
     }
-    // random.shuffle(self.questions)
+
+    std::shuffle(this->questions_list.begin(), this->questions_list.end(),
+                 std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count()));
+
     this->ui.questions_count_label->setText(QString("Осталось вопросов: %1").arg(this->questions_list.size()));
 }
 
@@ -244,9 +261,11 @@ bool FrescoWindow::is_name(const QString &name) const {
     return name != "";
 }
 
-double FrescoWindow::calculate_time(const int rating) const {}
+int FrescoWindow::calculate_time(const int rating) const {
     // expression = eval(self.config.calculate_time_function)
     // return max(0, expression)
+    return rating;
+}
 
 QString FrescoWindow::last_letter(const int rating) const {
     if (rating >= 11 && rating <= 20) {

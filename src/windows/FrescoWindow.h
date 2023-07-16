@@ -34,7 +34,7 @@ class FrescoWindow : public QMainWindow {
 
         void set_time_label();
 
-        void set_question_label(const QString &question);
+        void set_question_label();
 
         void init_remaining_time_label();
 
@@ -63,7 +63,7 @@ class FrescoWindow : public QMainWindow {
 
         bool is_name(const QString &name) const;
 
-        double calculate_time(const int rating) const;
+        int calculate_time(const int rating) const;
 
         QString last_letter(const int rating) const;
 };
