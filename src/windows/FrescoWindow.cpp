@@ -10,11 +10,12 @@
 #include <QString>
 // #include <QTimer>
 
-#include "FrescoWindow.h"
+#include "../enums.h"
 #include "../load_config/load_config.h"
+#include "FrescoWindow.h"
 
 
-FrescoWindow::FrescoWindow(const QString &data_file_path, const QString &rating_col_name, const QString &current_theme, QWidget *parent) : QMainWindow(parent) {
+FrescoWindow::FrescoWindow(const QString &data_file_path, const QString &rating_col_name, const Theme current_theme, QWidget *parent) : QMainWindow(parent) {
     this->config = load_config("res/default_config/FrescoWindowConfig.json");
 
     this->current_theme = current_theme;
@@ -40,7 +41,7 @@ void FrescoWindow::init_ui() {
     this->ui.cells_count_spin_box->setValue(this->config["fresco_cells_count_init_value"].toInt());
     this->cells_count_spin_box_changed();
 
-    this->ui.win_cells_count_spin_box->setValue(this->config["fresco_not_empty_cells_count_init_value"].toInt());
+    this->ui.win_cells_count_spin_box->setValue(this->config["fresco_win_cells_count_init_value"].toInt());
     this->ui.attempts_count_spin_box->setValue(this->config["fresco_attempts_count_init_value"].toInt());
 
     const QString lobster_font = QFontDatabase::applicationFontFamilies(QFontDatabase::addApplicationFont(":lobster_font"))[0];
@@ -70,7 +71,7 @@ void FrescoWindow::init_ui() {
 }
 
 void FrescoWindow::create_connections() {
-    connect(this->ui.switch_theme_button, &QPushButton::clicked, this, [=]{this->switch_theme(this->current_theme == "dark" ? "light" : "dark");});
+    connect(this->ui.switch_theme_button, &QPushButton::clicked, this, [=]{this->switch_theme(this->current_theme == Theme::dark ? Theme::light : Theme::dark);});
     connect(this->ui.clear_button, &QPushButton::clicked, this, [=]{this->clear();});
     connect(this->ui.generate_riddle_button, &QPushButton::clicked, this, [=]{this->generate_riddle();});
     connect(this->ui.refresh_questions_button, &QPushButton::clicked, this, [=]{this->import_questions_from_TeX();});
@@ -166,8 +167,6 @@ void FrescoWindow::import_questions_from_TeX() {
     }
     // random.shuffle(self.questions)
     this->ui.questions_count_label->setText(QString("Осталось вопросов: %1").arg(this->questions_list.size()));
-    qDebug() << this->questions_list;
-    qDebug() << this->questions_list.size();
 }
 
 void FrescoWindow::set_evil_style() {
@@ -223,10 +222,20 @@ void FrescoWindow::clear() {
     // self.total_time = None
 }
 
-void FrescoWindow::switch_theme(const QString &theme) {
+void FrescoWindow::switch_theme(const Theme theme) {
     this->current_theme = theme;
 
-    QFile qss_file(QString(":%1_theme").arg(theme));
+    QString theme_string;
+    switch(this->current_theme) {
+        case Theme::dark:
+            theme_string = "dark";
+            break;
+        case Theme::light:
+            theme_string = "light";
+            break;
+    }
+
+    QFile qss_file(QString(":%1_theme").arg(theme_string));
     qss_file.open(QFile::ReadOnly);
     this->setStyleSheet(QLatin1String(qss_file.readAll()));
 }

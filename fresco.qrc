@@ -29,8 +29,5 @@
 
         <file alias="dark_theme">res/styles/dark.qss</file>
         <file alias="light_theme">res/styles/light.qss</file>
-
-        <file alias="data_upload_ui">res/ui/data_upload.ui</file>
-        <file alias="fresco_ui">res/ui/fresco.ui</file>
     </qresource>
 </RCC>

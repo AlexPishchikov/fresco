@@ -1,13 +1,13 @@
-### DataUploadingDialogConfig.json
+### DownloadDialogConfig.json
 Конфиг для окна загрузки данных.
 #### Ключи:
-- `data_uploading_folder_name`
+- `download_dialog_folder_name`
 
     **Тип:** `string`
 
     **Описание:** Путь до папки, в которой сохраняются скачанные таблицы.
 
-- `data_uploading_rating_col_name`
+- `download_dialog_rating_col_name`
 
     **Тип:** `string`
 
@@ -24,7 +24,7 @@
 
     **Ограничение:** `[3, 26]`
 
-- `fresco_not_empty_cels_count_init_value`
+- `fresco_win_cells_count_init_value`
 
     **Тип:** `int`
 

@@ -5,23 +5,24 @@
 #include <QStringList>
 #include <QWidget>
 
-#include "../../build/ui/ui_data_upload.h"
+#include "../../build/ui/ui_download_dialog.h"
+#include "../enums.h"
 #include "../workers/DownloadWorker.h"
 
 
-class DataUploadDialog : public QDialog {
+class DownloadDialog : public QDialog {
     public:
-        DataUploadDialog(QWidget *parent = nullptr);
+        DownloadDialog(QWidget *parent = nullptr);
     private:
         DownloadWorker worker;
-
-        Ui::DataUploadUi ui;
 
         QJsonObject config;
 
         QMovie loading_gif;
 
-        QString current_theme;
+        Theme current_theme;
+
+        Ui::DownloadDialogUi ui;
 
         void init_cached_tables_dir() const;
 
@@ -55,5 +56,5 @@ class DataUploadDialog : public QDialog {
 
         void set_widgets_enabled(const bool status);
 
-        void switch_theme(const QString &theme);
+        void switch_theme(const Theme theme);
 };

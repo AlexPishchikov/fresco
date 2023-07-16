@@ -8,18 +8,18 @@ RCC_DIR = build
 UI_DIR = build/ui
 
 
-FORMS += res/ui/data_upload.ui \
+FORMS += res/ui/download_dialog.ui \
          res/ui/fresco.ui
 
 HEADERS += src/load_config/load_config.h \
            src/workers/DownloadWorker.h \
-           src/windows/DataUploadDialog.h \
+           src/windows/DownloadDialog.h \
            src/windows/FrescoWindow.h
 
 SOURCES += main.cpp \
            src/load_config/load_config.cpp \
            src/workers/DownloadWorker.cpp \
-           src/windows/DataUploadDialog.cpp \
+           src/windows/DownloadDialog.cpp \
            src/windows/FrescoWindow.cpp
 
 RESOURCES += fresco.qrc

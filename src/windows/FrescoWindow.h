@@ -5,23 +5,24 @@
 #include <QStringList>
 
 #include "../../build/ui/ui_fresco.h"
+#include "../enums.h"
 
 
 class FrescoWindow : public QMainWindow {
     public:
-        FrescoWindow(const QString &data_file_name, const QString &rating_col_name, const QString &current_theme, QWidget *parent = nullptr);
+        FrescoWindow(const QString &data_file_name, const QString &rating_col_name, const Theme current_theme, QWidget *parent = nullptr);
     private:
-        Ui::FrescoWindowUi ui;
-
         QHash<QString, int> rating_by_name;
 
         QJsonObject config;
 
-        QString current_theme;
-
         QString questions_file_path;
 
         QStringList questions_list;
+
+        Theme current_theme;
+
+        Ui::FrescoWindowUi ui;
 
         void init_ui();
 
@@ -58,7 +59,7 @@ class FrescoWindow : public QMainWindow {
 
         void clear();
 
-        void switch_theme(const QString &theme);
+        void switch_theme(const Theme theme);
 
         bool is_name(const QString &name) const;
 

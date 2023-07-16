@@ -1,6 +1,6 @@
 {
     "fresco_cells_count_init_value" : 6,
-    "fresco_not_empty_cells_count_init_value" : 1,
+    "fresco_win_cells_count_init_value" : 1,
     "fresco_attempts_count_init_value" : 1,
     "fresco_const_upper_label_font_size" : 32,
     "fresco_const_lower_label_font_size" : 24,
