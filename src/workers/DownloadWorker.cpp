@@ -3,6 +3,7 @@
 #include <QNetworkRequest>
 #include <QMimeData>
 #include <QRegExp>
+#include <QRegularExpression>
 #include <QString>
 
 #include "DownloadWorker.h"
@@ -23,16 +24,25 @@ void DownloadWorker::download(const QString &load_table_url, const QString &save
 }
 
 void DownloadWorker::download_finished(const QString &save_path) {
-    QMimeData data;
-    data.setData("text/uri-list", this->reply->header(QNetworkRequest::ContentDispositionHeader).toByteArray());
+    QMimeData headers;
+    headers.setData("text/uri-list", this->reply->header(QNetworkRequest::ContentDispositionHeader).toByteArray());
 
-    const QString filename = data.text().split('\'').last().remove(QRegExp("%([A-F0-9]{2})"));
+    const QString filename = headers.text().split('\'').last().remove(QRegExp("%([A-F0-9]{2})"));
 
     if (filename != "") {
+        QStringList data = QString(this->reply->readAll()).split(',');
+        const QRegularExpression regex("\"[^\"]+\"");
+
+        for (int i = 0; i < data.size(); i++) {
+            if (regex.match(data[i]).hasMatch()) {
+                data[i] = data[i].replace('\n', ' ');
+            }
+        }
+
         this->file_path = save_path + filename;
         QFile table(this->file_path);
         table.open(QFile::WriteOnly);
-        table.write(this->reply->readAll());
+        table.write(data.join(',').toUtf8());
     }
 
     emit finished();

@@ -91,15 +91,12 @@ void FrescoWindow::create_connections() {
 void FrescoWindow::parse_csv(const QString &data_file_path, const QString &rating_col_name) {
     QFile table_file(data_file_path);
     table_file.open(QFile::ReadOnly);
-    QString headers_line = table_file.readLine();
-    if (!headers_line.split(',').contains(rating_col_name)) {
-        headers_line = table_file.readLine();
-    }
 
-    int rating_col_index = headers_line.split(',').indexOf(rating_col_name);
+    const int rating_col_index = QString(table_file.readLine()).split(',').indexOf(rating_col_name);
+    const QRegularExpression regex(",\s*(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
     while (!table_file.atEnd()) {
-        const QStringList line = QString(table_file.readLine()).split(',');
-        if (line[rating_col_index] != "" && this->is_name(line[0])) {
+        const QStringList line = QString(table_file.readLine()).split(regex);
+        if (line.size() > rating_col_index && line[rating_col_index] != "" && this->is_name(line[0])) {
             this->add_student_to_combo_box(line[0].simplified(), line[rating_col_index].toInt());
         }
     }
@@ -218,10 +215,6 @@ void FrescoWindow::show_roulette_dialog() {}
     // self.roulette_window.close()
     // self.roulette_window = RouletteDialog(self.cells_count_spin_box.value(), self.win_cells_count_spin_box.value(), self.attempts_count_spin_box.value())
     // self.roulette_window.show()
-
-// void FrescoWindow::closeEvent() {}
-    // super().closeEvent(event)
-    // self.roulette_window.close()
 
 void FrescoWindow::clear() {
     this->setWindowTitle(this->config["fresco_window_title"].toString());

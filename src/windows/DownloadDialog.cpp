@@ -10,7 +10,6 @@
 #include <QPushButton>
 #include <QRadialGradient>
 #include <QRegularExpression>
-#include <QRegularExpressionMatch>
 #include <QString>
 #include <QStringList>
 #include <QWidget>
@@ -173,9 +172,8 @@ bool DownloadDialog::is_correct_url() const {
 }
 
 bool DownloadDialog::is_url() const {
-    QRegularExpression regex("^(?:https://|http://)?(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?))|(?:/?|[/?]\S+)$");
-    QRegularExpressionMatch url = regex.match(this->ui.url_line_edit->text());
-    return url.hasMatch();
+    const QRegularExpression regex("^(?:https://|http://)?(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?))|(?:/?|[/?]\S+)$");
+    return regex.match(this->ui.url_line_edit->text()).hasMatch();
 }
 
 void DownloadDialog::update_cache(const bool cache) {
@@ -223,11 +221,7 @@ void DownloadDialog::update_cache(const bool cache) {
 bool DownloadDialog::check_table_structure(const QString &file_path) const {
     QFile table_file(file_path);
     table_file.open(QFile::ReadOnly);
-    const QString line1 = table_file.readLine();
-    const QString line2 = table_file.readLine();
-
-    return line1.split(',').contains(this->config["download_dialog_rating_col_name"].toString()) ||
-           line2.split(',').contains(this->config["download_dialog_rating_col_name"].toString());
+    return QString(table_file.readLine()).split(',').contains(this->config["download_dialog_rating_col_name"].toString());
 }
 
 void DownloadDialog::show_fresco_window(const QString &data_file_name) {

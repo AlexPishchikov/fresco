@@ -54,9 +54,6 @@ class FrescoWindow : public QMainWindow {
 
         void show_roulette_dialog();
 
-        // void closeEvent();
-        // void closeEvent(event);
-
         void clear();
 
         void switch_theme(const Theme theme);
