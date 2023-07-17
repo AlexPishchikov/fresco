@@ -2,7 +2,6 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QMimeData>
-#include <QRegExp>
 #include <QRegularExpression>
 #include <QString>
 
@@ -27,7 +26,7 @@ void DownloadWorker::download_finished(const QString &save_path) {
     QMimeData headers;
     headers.setData("text/uri-list", this->reply->header(QNetworkRequest::ContentDispositionHeader).toByteArray());
 
-    const QString filename = headers.text().split('\'').last().remove(QRegExp("%([A-F0-9]{2})"));
+    const QString filename = headers.text().split('\'').last().remove(QRegularExpression("%([A-F0-9]{2})"));
 
     if (filename != "") {
         QStringList data = QString(this->reply->readAll()).split(',');

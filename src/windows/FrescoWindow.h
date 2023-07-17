@@ -3,6 +3,7 @@
 #include <QMainWindow>
 #include <QString>
 #include <QStringList>
+#include <QTimer>
 
 #include "../../build/ui/ui_fresco.h"
 #include "../enums.h"
@@ -12,13 +13,15 @@ class FrescoWindow : public QMainWindow {
     public:
         FrescoWindow(const QString &data_file_name, const QString &rating_col_name, const Theme current_theme, QWidget *parent = nullptr);
     private:
-        QHash<QString, int> rating_by_name;
+        QHash<QString, int> time_by_name;
 
         QJsonObject config;
 
         QString questions_file_path;
 
         QStringList questions_list;
+
+        QTimer timer;
 
         Theme current_theme;
 
@@ -60,7 +63,7 @@ class FrescoWindow : public QMainWindow {
 
         bool is_name(const QString &name) const;
 
-        int calculate_time(const int rating) const;
+        unsigned int calculate_time(const int rating) const;
 
-        QString last_letter(const int rating) const;
+        QString last_letter(const int time) const;
 };

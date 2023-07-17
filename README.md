@@ -15,4 +15,4 @@
 А [здесь](https://github.com/AlexPishchikov/fresco/blob/master/res/default_config/config_example.json) можно увидеть пример такого файла.
 
 ### Команда запуска
-`qmake5 fresco.pro && make && ./fresco`
+`qmake6 fresco.pro && make && ./fresco`
