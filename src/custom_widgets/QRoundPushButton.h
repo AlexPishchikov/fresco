@@ -1,3 +1,4 @@
+#include <QMouseEvent>
 #include <QPoint>
 #include <QPushButton>
 
@@ -12,5 +13,5 @@ class QRoundPushButton : public QPushButton {
 
         void set_lose_style();
     private:
-        // void mousePressEvent(QEvent click_pos);
+        void mousePressEvent(const QMouseEvent *press);
 };
