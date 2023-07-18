@@ -22,6 +22,7 @@
 
 FrescoWindow::FrescoWindow(const QString &data_file_path, const QString &rating_col_name, const Theme current_theme, QWidget *parent) : QMainWindow(parent) {
     this->config = load_config("res/default_config/FrescoWindowConfig.json");
+    this->timer.setInterval(this->config["fresco_time_interval"].toInt());
 
     this->current_theme = current_theme;
 
@@ -77,11 +78,10 @@ void FrescoWindow::create_connections() {
     connect(this->ui.roulette_button, &QPushButton::clicked, this, [=]{this->show_roulette_dialog();});
     connect(this->ui.select_questions_file_button, &QPushButton::clicked, this, [=]{this->select_questons_file();});
     connect(this->ui.start_timer_button, &QPushButton::clicked, this, [=]{this->start_timer();});
-
+    connect(this->ui.stop_timer_button, &QPushButton::clicked, this, [=]{this->timer.stop();});
     connect(this->ui.cells_count_spin_box, QOverload<int>::of(&QSpinBox::valueChanged), this, [=]{this->cells_count_spin_box_changed();});
 
-    // connect(this->timer, &QTimer::timeout, this, [=]{this->update_remaining_time_label();});
-    connect(this->ui.stop_timer_button, &QPushButton::clicked, this, [=]{this->timer.stop();});
+    connect(&this->timer, &QTimer::timeout, this, [=]{this->update_remaining_time_label();});
 }
 
 void FrescoWindow::parse_csv(const QString &data_file_path, const QString &rating_col_name) {
@@ -118,7 +118,14 @@ void FrescoWindow::set_question_label() {
 }
 
 void FrescoWindow::init_remaining_time_label() {
-    // self.remaining_time_label.setText(f'{self.total_time}{"." if self.time_label_len > 0 else ""}{"0" * self.time_label_len}')
+    const int precision = 3 - QString::number(this->config["fresco_time_interval"].toInt()).size() +
+                            + QString::number(this->config["fresco_time_interval"].toInt()).remove(QRegularExpression("0+$")).size();
+
+    const QString label_text = QString("%1%2%3").arg(this->time_by_name[this->ui.name_combo_box->currentText()])
+                                                .arg(precision > 0 ? "." : "")
+                                                .arg(QString("0").repeated(precision));
+
+    this->ui.remaining_time_label->setText(label_text);
 }
 
 void FrescoWindow::generate_riddle() {
@@ -191,31 +198,38 @@ void FrescoWindow::set_evil_style() {
 }
 
 void FrescoWindow::start_timer() {
+    this->timer.stop();
     if (this->time_by_name[this->ui.name_combo_box->currentText()] == 0) {
         this->set_evil_style();
         return;
     }
-    this->timer.stop();
-    this->ui.img_label->setPixmap(":good_fresco_image");
-    // self.init_remaining_time_label()
-    // self.remaining_time_timer.start()
+
+    this->ui.img_label->setPixmap(QPixmap(":good_fresco_image"));
+    this->init_remaining_time_label();
+
+    this->timer.start();
 }
 
-void FrescoWindow::update_remaining_time_label() {}
-    // current_time = round(float(self.remaining_time_label.text()) - self.time_interval / 1000, self.time_label_len)
-    // self.remaining_time_label.setText(f'{current_time:g}')
-    // if current_time <= 0:
-    //     self.set_evil_style()
-    //     self.remaining_time_timer.stop()
+void FrescoWindow::update_remaining_time_label() {
+    const double current_time = this->ui.remaining_time_label->text().toDouble() - this->config["fresco_time_interval"].toInt() / 1000.0;
+
+    if (current_time <= 0) {
+        this->timer.stop();
+        this->set_evil_style();
+    }
+    else {
+        this->ui.remaining_time_label->setText(QString::number(current_time));
+    }
+}
 
 void FrescoWindow::cells_count_spin_box_changed() {
     this->ui.win_cells_count_spin_box->setMaximum(this->ui.cells_count_spin_box->value());
     this->ui.attempts_count_spin_box->setMaximum(this->ui.cells_count_spin_box->value());
 }
 
-void FrescoWindow::show_roulette_dialog() {}
-    // self.roulette_window = RouletteDialog(self.cells_count_spin_box.value(), self.win_cells_count_spin_box.value(), self.attempts_count_spin_box.value())
-    // self.roulette_window.show()
+void FrescoWindow::show_roulette_dialog() {
+    // RouletteDialog(this->ui.cells_count_spin_box->value(), this->ui.win_cells_count_spin_box->value(), this->ui.attempts_count_spin_box->value()).show();
+}
 
 void FrescoWindow::clear() {
     this->setWindowTitle(this->config["fresco_window_title"].toString());
@@ -229,7 +243,7 @@ void FrescoWindow::clear() {
     this->ui.img_label->setPixmap(QPixmap(":good_fresco_image"));
     this->ui.name_combo_box->setCurrentIndex(0);
 
-    // self.remaining_time_timer.stop()
+    this->timer.stop();
 }
 
 void FrescoWindow::switch_theme(const Theme theme) {
@@ -261,7 +275,7 @@ unsigned int FrescoWindow::calculate_time(const int rating) const {
 }
 
 QString FrescoWindow::last_letter(const int time) const {
-    if (time >= 11 && time <= 20) {
+    if (QString::number(time).last(2).toInt() >= 11 && QString::number(time).last(2).toInt() <= 20) {
         return "";
     }
     if (QString::number(time).last(1).toInt() >= 2 && QString::number(time).last(1).toInt() <= 4) {
