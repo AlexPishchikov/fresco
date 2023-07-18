@@ -1,4 +1,7 @@
+#pragma once
+
 #include <QDialog>
+#include <QJsonObject>
 #include <QString>
 #include <QWidget>
 
@@ -7,8 +10,12 @@ class RouletteDialog : public QDialog {
     public:
         RouletteDialog(const int total, const int win, const int attempts, QWidget *parent = nullptr);
 
-        void show();
+        void showEvent();
+
+        // void close();
     private:
+        QJsonObject config;
+
         void get_sound_duration(const QString& file_path) const;
 
         void place_buttons();
@@ -24,8 +31,6 @@ class RouletteDialog : public QDialog {
         double spin_function_vertical(const int i, const int t) const;
 
         void set_buttons_enabled(const bool status);
-
-        void close();
 
         // void mousePressEvent(click_pos);
 };

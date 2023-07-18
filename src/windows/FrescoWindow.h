@@ -7,6 +7,7 @@
 
 #include "../../build/ui/ui_fresco.h"
 #include "../enums.h"
+#include "RouletteDialog.h"
 
 
 class FrescoWindow : public QMainWindow {
@@ -22,6 +23,8 @@ class FrescoWindow : public QMainWindow {
         QStringList questions_list;
 
         QTimer timer;
+
+        RouletteDialog* roulette;
 
         Theme current_theme;
 

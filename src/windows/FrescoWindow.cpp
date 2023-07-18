@@ -229,7 +229,11 @@ void FrescoWindow::cells_count_spin_box_changed() {
 }
 
 void FrescoWindow::show_roulette_dialog() {
-    RouletteDialog(this->ui.cells_count_spin_box->value(), this->ui.win_cells_count_spin_box->value(), this->ui.attempts_count_spin_box->value()).show();
+    if (roulette != nullptr) {
+        roulette->close();
+    }
+    roulette = new RouletteDialog(this->ui.cells_count_spin_box->value(), this->ui.win_cells_count_spin_box->value(), this->ui.attempts_count_spin_box->value());
+    roulette->show();
 }
 
 void FrescoWindow::clear() {

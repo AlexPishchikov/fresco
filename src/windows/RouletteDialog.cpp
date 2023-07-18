@@ -1,18 +1,45 @@
+#include <cmath>
+
 #include <QDialog>
+#include <QRect>
+#include <QRegion>
 #include <QString>
 #include <QWidget>
 
 #include "../load_config/load_config.h"
-// #include "../custom_widgets/QHoleLabel.h"
-// #include "../custom_widgets/QRoundButton.h"
+#include "../custom_widgets/QHoleLabel.h"
+#include "../custom_widgets/QRoundPushButton.h"
 #include "RouletteDialog.h"
 
 
-RouletteDialog::RouletteDialog(const int total, const int win, const int attempts, QWidget *parent) : QDialog(parent) {}
-    // super().__init__()
-    // self.setWindowFlag(Qt.FramelessWindowHint)
+RouletteDialog::RouletteDialog(const int total, const int win, const int attempts, QWidget *parent) : QDialog(parent) {
+    this->config = load_config("res/default_config/RouletteDialogConfig.json");
 
-    // self.config = RouletteDialogConfig()
+    this->setWindowFlag(Qt::FramelessWindowHint);
+
+    const int button_size = this->config["roulette_button_size"].toInt();
+    const int button_margin = this->config["roulette_button_margin"].toInt();
+
+    const int height = 3 * (button_size + 2 * button_margin) / total + (button_size + button_margin) / (2 * std::sin(M_PI / total));
+    const int width = 3 * (button_size + 2 * button_margin) / total + (button_size + button_margin) / (2 * std::sin(M_PI / total));
+
+    this->setFixedSize(2 * (height + button_margin) + button_size, 2 * (width + button_margin) + button_size);
+
+    this->setStyleSheet(QString("border-radius: %1px; border: 2px solid black;").arg(this->width() / 2));
+    this->setMask(QRegion(this->rect(), QRegion::Ellipse));
+
+    // this->place_buttons();
+
+    for (int i = 0; i < total; i++) {
+        QRoundPushButton* button = new QRoundPushButton(button_size, this);
+        const double x = height * std::cos(2 * M_PI * i / total) + (this->height() - button->width()) / 2;
+        const double y = width * std::sin(2 * M_PI * i / total) + (this->width() - button->height()) / 2;
+        // button->setGeometry(x, y, 40, 40);
+        connect(button, &QRoundPushButton::clicked, this, [=]{qDebug() << i;});
+        button->move(x, y);
+        button->show();
+    }
+
 
     // self.shot_sound = QSound(self.config.roulette_shot_sound_file_path)
     // self.spinning_sound = QSound(self.config.roulette_spinning_sound_file_path)
@@ -46,18 +73,20 @@ RouletteDialog::RouletteDialog(const int total, const int win, const int attempt
 
     // self.place_buttons_round()
     // self.loading()
+}
 
-void RouletteDialog::show() {}
+void RouletteDialog::showEvent() {
     // super().show()
     // self.spinning_sound.play()
     // self.spinning_timer.start()
+}
 
 void RouletteDialog::get_sound_duration(const QString& file_path) const {}
     // spinning_sound_file = self.spinning_sound.fileName()
     // with contextlib.closing(wave.open(spinning_sound_file, 'r')) as file:
     //     return round(file.getnframes() / float(file.getframerate()) * 1000)
 
-void RouletteDialog::place_buttons() {}
+void RouletteDialog::place_buttons() {
     // font_id = QFontDatabase.addApplicationFont(QDir.currentPath() + '/res/fonts/Lobster-Regular.ttf')
     // lobster_font = QFontDatabase.applicationFontFamilies(font_id)[0]
 
@@ -76,7 +105,6 @@ void RouletteDialog::place_buttons() {}
     //     roulette_button.setFont(QFont('Comic Sans MS', self.config.roulette_buttons_font_size))
     //     roulette_button.setText(button_labels[i])
     //     roulette_button.setShortcut(QKeySequence(button_labels[i]))
-    //     roulette_button.clicked.connect(self.i_hate_python(i))
 
     //     self.roulette_buttons.append(roulette_button)
 
@@ -94,6 +122,7 @@ void RouletteDialog::place_buttons() {}
     // self.setStyleSheet(f'border-radius: {math.floor(self.size().width() / 2)}px; border: 2px solid black;')
     // self.mask = QRegion(self.rect(), QRegion.Ellipse)
     // self.setMask(self.mask)
+}
 
 void RouletteDialog::loading() {}
     // letters = list(range(self.cells_count))
@@ -167,7 +196,7 @@ void RouletteDialog::set_buttons_enabled(const bool status) {}
     // for button in self.roulette_buttons:
     //     button.setEnabled(status)
 
-void RouletteDialog::close() {}
+// void RouletteDialog::close() {}
     // super().close()
     // self.spinning_sound.stop()
     // self.spinning_timer.stop()
