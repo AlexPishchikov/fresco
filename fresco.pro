@@ -14,13 +14,15 @@ FORMS += res/ui/download_dialog.ui \
 HEADERS += src/load_config/load_config.h \
            src/workers/DownloadWorker.h \
            src/windows/DownloadDialog.h \
-           src/windows/FrescoWindow.h
+           src/windows/FrescoWindow.h \
+           src/windows/RouletteDialog.h
 
 SOURCES += main.cpp \
            src/load_config/load_config.cpp \
            src/workers/DownloadWorker.cpp \
            src/windows/DownloadDialog.cpp \
-           src/windows/FrescoWindow.cpp
+           src/windows/FrescoWindow.cpp \
+           src/windows/RouletteDialog.cpp
 
 RESOURCES += fresco.qrc
 

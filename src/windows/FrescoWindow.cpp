@@ -18,6 +18,7 @@
 #include "../enums.h"
 #include "../load_config/load_config.h"
 #include "FrescoWindow.h"
+#include "RouletteDialog.h"
 
 
 FrescoWindow::FrescoWindow(const QString &data_file_path, const QString &rating_col_name, const Theme current_theme, QWidget *parent) : QMainWindow(parent) {
@@ -228,7 +229,7 @@ void FrescoWindow::cells_count_spin_box_changed() {
 }
 
 void FrescoWindow::show_roulette_dialog() {
-    // RouletteDialog(this->ui.cells_count_spin_box->value(), this->ui.win_cells_count_spin_box->value(), this->ui.attempts_count_spin_box->value()).show();
+    RouletteDialog(this->ui.cells_count_spin_box->value(), this->ui.win_cells_count_spin_box->value(), this->ui.attempts_count_spin_box->value()).show();
 }
 
 void FrescoWindow::clear() {
