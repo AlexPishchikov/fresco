@@ -1,3 +1,5 @@
+#pragma once
+
 #include <QMouseEvent>
 #include <QPoint>
 #include <QPushButton>

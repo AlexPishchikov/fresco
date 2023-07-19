@@ -3,7 +3,11 @@
 #include <QDialog>
 #include <QJsonObject>
 #include <QString>
+#include <QTimer>
+#include <QVector>
 #include <QWidget>
+
+#include "../custom_widgets/QRoundPushButton.h"
 
 
 class RouletteDialog : public QDialog {
@@ -16,11 +20,15 @@ class RouletteDialog : public QDialog {
     private:
         QJsonObject config;
 
+        QTimer timer;
+
+        QVector<QRoundPushButton*> buttons;
+
         void get_sound_duration(const QString& file_path) const;
 
-        void place_buttons();
+        void place_buttons(const int r, const int total, const int button_size, const int window_size);
 
-        void loading();
+        void set_buttons_labels();
 
         void spin_buttons();
 
