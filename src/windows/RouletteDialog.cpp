@@ -3,12 +3,15 @@
 #include <cmath>
 #include <random>
 
+#include <QCloseEvent>
 #include <QDialog>
 #include <QFont>
 #include <QFontDatabase>
 #include <QKeySequence>
+// #include <QMediaPlayer>
 #include <QRect>
 #include <QRegion>
+#include <QShowEvent>
 #include <QString>
 #include <QTimer>
 #include <QWidget>
@@ -37,7 +40,13 @@ RouletteDialog::RouletteDialog(const int total, const int win, const int attempt
 
     this->place_buttons(r, total, button_size, window_size);
     this->set_buttons_labels();
-    // this->set_buttons_enabled(false);
+
+    this->spin_duration = this->get_sound_duration(":spin_sound");
+
+    connect(&this->timer, &QTimer::timeout, this, [=]{this->spin_buttons(r, total, button_size, window_size);});
+
+    // qDebug() << this->get_sound_duration(":spin_sound");
+    this->set_buttons_enabled(false);
 
     // this->spin_buttons();
 
@@ -60,16 +69,13 @@ RouletteDialog::RouletteDialog(const int total, const int win, const int attempt
     // self.spinning_timer.setInterval(self.spin_step)
 }
 
-void RouletteDialog::showEvent() {
-    // super().show()
-    // self.spinning_sound.play()
-    // self.spinning_timer.start()
-}
 
-void RouletteDialog::get_sound_duration(const QString& file_path) const {}
-    // spinning_sound_file = self.spinning_sound.fileName()
-    // with contextlib.closing(wave.open(spinning_sound_file, 'r')) as file:
-    //     return round(file.getnframes() / float(file.getframerate()) * 1000)
+int RouletteDialog::get_sound_duration(const QString& file_path) const {
+    // QMediaPlayer* player = new QMediaPlayer;
+    // player->setSource(file_path);
+    // return player->duration();
+    return 1000;
+}
 
 void RouletteDialog::place_buttons(const int r, const int total, const int button_size, const int window_size) {
     const double angle = 2 * M_PI / total;
@@ -105,19 +111,25 @@ void RouletteDialog::set_buttons_labels() {
     }
 }
 
-void RouletteDialog::spin_buttons() {}
-    // self.current_time += self.spin_step
-    // angle = -2 * math.pi / self.cells_count
-    // width = self.size().width()
-    // height = self.size().height()
-    // for i, button in enumerate(self.roulette_buttons):
-    //     button.move(int(self.r_h * math.cos(self.button_offset_angle + angle * i + self.spin_function_horisontal(i, self.current_time)) + (width  - self.button_size) / 2),
-    //                 int(self.r_v * math.sin(self.button_offset_angle + angle * i + self.spin_function_vertical(i, self.current_time))   + (height - self.button_size) / 2))
-    // if self.current_time >= self.spinning_duration:
-    //     self.spinning_timer.stop()
-    //     self.set_all_buttons_status(True)
+void RouletteDialog::spin_buttons(const int r, const int total, const int button_size, const int window_size) {
+    if (this->spin_duration <= 0) {
+        this->timer.stop();
+        this->set_buttons_enabled(true);
+        return;
+    }
+
+    this->spin_duration -= this->timer.interval();
+
+    const double angle = 2 * M_PI / total;
+    for (int i = 0; i < this->buttons.size(); i++) {
+        const double x = r * std::cos(angle * i + this->spin_offset(i, this->spin_duration)) + (window_size - button_size) / 2;
+        const double y = r * std::sin(angle * i + this->spin_offset(i, this->spin_duration)) + (window_size - button_size) / 2;
+        this->buttons[i]->move(x, y);
+    }
+}
 
 void RouletteDialog::shoot(const int button_number) {
+    qDebug() << button_number;
     // if self.attempts_count < 0:
     //     return
     // self.attempts_count -= 1
@@ -159,13 +171,10 @@ void RouletteDialog::shoot(const int button_number) {
     //     return
 }
 
-double RouletteDialog::spin_function_horisontal(const int i, const int t) const {}
-    // expression = eval(self.config.spin_function_horisontal)
-    // return expression
-
-double RouletteDialog::spin_function_vertical(const int i, const int t) const {}
-    // expression = eval(self.config.spin_function_vertical)
-    // return expression
+double RouletteDialog::spin_offset(const int i, const int t) const {
+    return 1.0 / (22.0 * powf(M_E, -powf(t, 2.0) / powf(2.0, 18.0)));
+    // return t / 400.0;
+}
 
 void RouletteDialog::set_buttons_enabled(const bool status) {
     for (QRoundPushButton* button : buttons) {
@@ -173,11 +182,16 @@ void RouletteDialog::set_buttons_enabled(const bool status) {
     }
 }
 
-// void RouletteDialog::close() {}
-    // super().close()
-    // self.spinning_sound.stop()
-    // self.spinning_timer.stop()
+void RouletteDialog::showEvent(QShowEvent* event) {
+    QDialog::showEvent(event);
+    this->timer.start(this->config["roulette_spin_step"].toInt());
+}
 
+void RouletteDialog::closeEvent(QCloseEvent* event) {
+    QDialog::closeEvent(event);
+    this->timer.stop();
+    // self.spinning_sound.stop()
+}
 
 
 // void RouletteDialog::mousePressEvent(click_pos) {}
