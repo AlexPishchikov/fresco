@@ -3,17 +3,19 @@
 #include <cmath>
 #include <random>
 
+#include <QAudioOutput>
 #include <QCloseEvent>
 #include <QDialog>
 #include <QFont>
 #include <QFontDatabase>
 #include <QKeySequence>
-// #include <QMediaPlayer>
+#include <QMediaPlayer>
 #include <QRect>
 #include <QRegion>
 #include <QShowEvent>
 #include <QString>
 #include <QTimer>
+#include <QUrl>
 #include <QWidget>
 
 #include "../load_config/load_config.h"
@@ -23,9 +25,13 @@
 
 
 RouletteDialog::RouletteDialog(const int total, const int win, const int attempts, QWidget *parent) : QDialog(parent) {
+    this->attempts = attempts;
+
     this->config = load_config("res/default_config/RouletteDialogConfig.json");
 
     this->setWindowFlag(Qt::FramelessWindowHint);
+
+    this->init_sounds();
 
     const int button_size = this->config["roulette_button_size"].toInt();
     const int button_margin = this->config["roulette_button_margin"].toInt();
@@ -41,40 +47,38 @@ RouletteDialog::RouletteDialog(const int total, const int win, const int attempt
     this->place_buttons(r, total, button_size, window_size);
     this->set_buttons_labels();
 
-    this->spin_duration = this->get_sound_duration(":spin_sound");
-
     connect(&this->timer, &QTimer::timeout, this, [=]{this->spin_buttons(r, total, button_size, window_size);});
 
-    // qDebug() << this->get_sound_duration(":spin_sound");
     this->set_buttons_enabled(false);
 
-    // this->spin_buttons();
-
-
-    // self.shot_sound = QSound(self.config.roulette_shot_sound_file_path)
-    // self.spinning_sound = QSound(self.config.roulette_spinning_sound_file_path)
-    // self.empty_sound = QSound(self.config.roulette_empty_sound_file_path)
-
-    // self.shot_hole_label_size = self.config.shot_hole_label_size
-
-    // self.selected_cell = 0
-    // self.not_empty_cells = list()
-    // self.roulette_buttons = list()
-
-    // self.spin_step = self.config.spin_step
-    // self.current_time = 0
-    // self.spinning_duration = self.get_spinning_duration()
-    // self.spinning_timer = QTimer(self)
-    // self.spinning_timer.timeout.connect(self.buttons_spinning)
-    // self.spinning_timer.setInterval(self.spin_step)
+    for (int i = 0; i < total; i++) {
+        this->win_buttons.push_back(i);
+    }
+    std::shuffle(this->win_buttons.begin(), this->win_buttons.end(), std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count()));
+    this->win_buttons = this->win_buttons.mid(total - win);
 }
 
+void RouletteDialog::init_sounds() {
+    this->spin_sound = new QMediaPlayer(this);
+    this->shot_sound = new QMediaPlayer(this);
+    this->empty_sound = new QMediaPlayer(this);
 
-int RouletteDialog::get_sound_duration(const QString& file_path) const {
-    // QMediaPlayer* player = new QMediaPlayer;
-    // player->setSource(file_path);
-    // return player->duration();
-    return 1000;
+    this->spin_sound->setSource(QUrl("qrc:/spin_sound"));
+    this->shot_sound->setSource(QUrl("qrc:/shot_sound"));
+    this->empty_sound->setSource(QUrl("qrc:/empty_sound"));
+
+    this->spin_duration = this->spin_sound->duration();
+
+    QAudioOutput* audioOutput = new QAudioOutput;
+    this->spin_sound->setAudioOutput(audioOutput);
+    this->shot_sound->setAudioOutput(audioOutput);
+    this->empty_sound->setAudioOutput(audioOutput);
+}
+
+void RouletteDialog::stop_sounds() {
+    this->spin_sound->stop();
+    this->shot_sound->stop();
+    this->empty_sound->stop();
 }
 
 void RouletteDialog::place_buttons(const int r, const int total, const int button_size, const int window_size) {
@@ -90,14 +94,14 @@ void RouletteDialog::place_buttons(const int r, const int total, const int butto
         this->buttons.push_back(button);
     }
 
-    QRoundPushButton* close_button = new QRoundPushButton(button_size * 2, this);
-    connect(close_button, &QRoundPushButton::clicked, this, [=]{this->close();});
+    this->close_button = new QRoundPushButton(button_size * 2, this);
+    connect(this->close_button, &QRoundPushButton::clicked, this, [=]{this->close();});
 
-    close_button->move(window_size / 2 - button_size, window_size / 2 - button_size);
+    this->close_button->move(window_size / 2 - button_size, window_size / 2 - button_size);
 
     const QString lobster_font = QFontDatabase::applicationFontFamilies(QFontDatabase::addApplicationFont(":lobster_font"))[0];
-    close_button->setFont(QFont(lobster_font, this->config["roulette_close_button_font_size"].toInt()));
-    close_button->setText(this->config["roulette_close_button_init_text"].toString());
+    this->close_button->setFont(QFont(lobster_font, this->config["roulette_close_button_font_size"].toInt()));
+    this->close_button->setText(this->config["roulette_close_button_init_text"].toString());
 }
 
 void RouletteDialog::set_buttons_labels() {
@@ -122,57 +126,73 @@ void RouletteDialog::spin_buttons(const int r, const int total, const int button
 
     const double angle = 2 * M_PI / total;
     for (int i = 0; i < this->buttons.size(); i++) {
-        const double x = r * std::cos(angle * i + this->spin_offset(i, this->spin_duration)) + (window_size - button_size) / 2;
-        const double y = r * std::sin(angle * i + this->spin_offset(i, this->spin_duration)) + (window_size - button_size) / 2;
+        const double x = r * std::cos(angle * i + this->spin_offset(i, this->spin_sound->duration() - this->spin_duration)) + (window_size - button_size) / 2;
+        const double y = r * std::sin(angle * i + this->spin_offset(i, this->spin_sound->duration() - this->spin_duration)) + (window_size - button_size) / 2;
         this->buttons[i]->move(x, y);
     }
 }
 
 void RouletteDialog::shoot(const int button_number) {
-    qDebug() << button_number;
-    // if self.attempts_count < 0:
-    //     return
-    // self.attempts_count -= 1
+    if (this->attempts <= 0) {
+        return;
+    }
+    this->attempts -= 1;
 
-    // if button_number not in self.not_empty_cells:
-    //     self.close_button.setText(self.config.close_button_lose_text)
-    //     self.roulette_buttons[button_number].set_lose_style()
-    //     self.shot_sound.play()
-    //     self.shot_hole_label = QHoleLabel(self.shot_hole_label_size, self)
+    this->stop_sounds();
 
-    //     click_pos = QPoint(int(self.roulette_buttons[button_number].last_click_pos.x() + self.roulette_buttons[button_number].pos().x()),
-    //                        int(self.roulette_buttons[button_number].last_click_pos.y() + self.roulette_buttons[button_number].pos().y()))
+    if (!this->win_buttons.contains(button_number)) {
+        this->set_buttons_enabled(false);
 
-    //     self.shot_hole_label.move(click_pos.x() - int(self.shot_hole_label.size / 2), click_pos.y() - int(self.shot_hole_label.size / 2))
-    //     self.shot_hole_label.show()
+        this->shot_sound->play();
 
-    //     shot_hole_region = QRegion(QRect(click_pos.x() - int(self.shot_hole_label.size / 8),
-    //                                      click_pos.y() - int(self.shot_hole_label.size / 8),
-    //                                      int(self.shot_hole_label.size / 4), int(self.shot_hole_label.size / 4)), QRegion.Ellipse)
+        this->attempts = 0;
 
-    //     self.mask = self.mask.subtracted(shot_hole_region)
-    //     self.setMask(self.mask)
-    // else:
-    //     self.close_button.setText(self.config.close_button_win_text)
-    //     for cell in self.not_empty_cells:
-    //         self.roulette_buttons[cell].set_win_style()
-    //     self.roulette_buttons[button_number].set_win_style(True)
-    //     self.attempts_count = -1
-    //     self.set_all_buttons_status(False)
-    //     self.empty_sound.play()
+        const int hole_size = this->config["roulette_shot_hole_label_size"].toInt();
+        QHoleLabel* shot_hole = new QHoleLabel(hole_size, this);
 
-    // self.roulette_buttons[button_number].setEnabled(False)
+        const QPoint hole_pos = this->buttons[button_number]->last_click_pos + QPoint(this->buttons[button_number]->x(), this->buttons[button_number]->y());
+        shot_hole->move(hole_pos.x() - hole_size / 2, hole_pos.y() - hole_size / 2);
+        shot_hole->show();
 
-    // if self.attempts_count == 0:
-    //     self.set_all_buttons_status(False)
-    //     for cell in self.not_empty_cells:
-    //         self.roulette_buttons[cell].set_win_style()
-    //     self.attempts_count -= 1
-    //     return
+        const QRegion shot_hole_region = QRegion(QRect(hole_pos.x() - hole_size / 8,
+                                                       hole_pos.y() - hole_size / 8,
+                                                       hole_size / 4,
+                                                       hole_size / 4),
+                                                       QRegion::Ellipse);
+
+        this->setMask(this->mask().subtracted(shot_hole_region));
+
+        for (int i = 0; i < this->buttons.size(); i++) {
+            if (this->win_buttons.contains(i)) {
+                this->buttons[i]->set_win_style();
+            }
+        }
+        this->buttons[button_number]->set_lose_style();
+
+        this->close_button->setText(this->config["roulette_close_button_lose_text"].toString());
+    }
+    else {
+        this->buttons[button_number]->setEnabled(false);
+
+        this->empty_sound->play();
+
+        this->buttons[button_number]->set_win_style(true);
+        this->win_buttons.removeAll(button_number);
+
+        if (this->attempts == 0) {
+            this->set_buttons_enabled(false);
+            this->close_button->setText(this->config["roulette_close_button_win_text"].toString());
+            for (int i = 0; i < this->buttons.size(); i++) {
+                if (this->win_buttons.contains(i)) {
+                    this->buttons[i]->set_win_style();
+                }
+            }
+        }
+    }
 }
 
 double RouletteDialog::spin_offset(const int i, const int t) const {
-    return 1.0 / (22.0 * powf(M_E, -powf(t, 2.0) / powf(2.0, 18.0)));
+    return 15.0 * powf(M_E, -powf(t, 2.0) / powf(2.0, 18.0));
     // return t / 400.0;
 }
 
@@ -184,23 +204,22 @@ void RouletteDialog::set_buttons_enabled(const bool status) {
 
 void RouletteDialog::showEvent(QShowEvent* event) {
     QDialog::showEvent(event);
+
+    this->spin_sound->play();
     this->timer.start(this->config["roulette_spin_step"].toInt());
 }
 
 void RouletteDialog::closeEvent(QCloseEvent* event) {
     QDialog::closeEvent(event);
+
+    this->stop_sounds();
     this->timer.stop();
-    // self.spinning_sound.stop()
 }
 
+void RouletteDialog::mousePressEvent(QMouseEvent* event) {
+    QDialog::mousePressEvent(event);
 
-// void RouletteDialog::mousePressEvent(click_pos) {}
-//     super().mousePressEvent(click_pos)
-//     if (self.size().width() / 2 - click_pos.x()) ** 2 + (self.size().height() / 2 - click_pos.y()) ** 2 <= (self.close_button.size().width() / 2) ** 2:
-//         self.close()
-//     for i, button in enumerate(self.roulette_buttons):
-//         if (click_pos.x() - (button.pos().x() + self.button_size / 2)) ** 2 +
-//            + (click_pos.y() - (button.pos().y() + self.button_size / 2)) ** 2 <= (self.button_size / 2) ** 2 and button.isEnabled():
-//             button.last_click_pos = QPoint(abs(button.pos().x() - click_pos.x()), abs(button.pos().y() - click_pos.y()))
-//             self.shoot(i)
-//             return
+    if (pow(this->size().width() / 2 - event->pos().x(), 2) + pow(this->size().height() / 2 - event->pos().y(), 2) <= pow(this->close_button->size().width() / 2, 2)) {
+        this->close();
+    }
+}

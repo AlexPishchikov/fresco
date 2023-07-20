@@ -19,17 +19,19 @@ QRoundPushButton::QRoundPushButton(const int size, QWidget *parent) : QPushButto
 }
 
 void QRoundPushButton::set_win_style(const bool is_pressed) {
-    this->setStyleSheet(QString(":disabled {{background: rgb(0, %1, 0); color: %2; border-radius: %3px; border: 2px solid black;}}").arg(is_pressed ? 255 : 150)
-                                                                                                                                    .arg(is_pressed ? "black" : "while")
-                                                                                                                                    .arg(this->width() / 2));
+    this->setStyleSheet(QString(":disabled {background: rgb(0, %1, 0); color: %2; border-radius: %3px; border: 2px solid black;}").arg(is_pressed ? 255 : 150)
+                                                                                                                                  .arg(is_pressed ? "black" : "white")
+                                                                                                                                  .arg(this->width() / 2));
 }
 
 void QRoundPushButton::set_lose_style() {
     this->setStyleSheet(QString("background: rgb(255, 0, 0); border-radius: %1px; border: 2px solid black;").arg(this->width() / 2));
 }
 
-void QRoundPushButton::mousePressEvent(const QMouseEvent *press) {
+void QRoundPushButton::mousePressEvent(QMouseEvent* event) {
+    QPushButton::mousePressEvent(event);
+
     if (this->isEnabled()) {
-        this->last_click_pos = press->pos();
+        this->last_click_pos = event->pos();
     }
 }

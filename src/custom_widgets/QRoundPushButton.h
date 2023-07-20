@@ -15,5 +15,5 @@ class QRoundPushButton : public QPushButton {
 
         void set_lose_style();
     private:
-        void mousePressEvent(const QMouseEvent *press);
+        void mousePressEvent(QMouseEvent* event);
 };

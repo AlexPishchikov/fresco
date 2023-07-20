@@ -31,4 +31,4 @@ SOURCES += main.cpp \
 RESOURCES += fresco.qrc
 
 
-QT += core gui network widgets
+QT += core gui multimedia network widgets

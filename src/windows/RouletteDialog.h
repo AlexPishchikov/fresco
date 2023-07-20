@@ -3,10 +3,12 @@
 #include <QCloseEvent>
 #include <QDialog>
 #include <QJsonObject>
+#include <QMediaPlayer>
+#include <QMouseEvent>
+#include <QList>
 #include <QShowEvent>
 #include <QString>
 #include <QTimer>
-#include <QVector>
 #include <QWidget>
 
 #include "../custom_widgets/QRoundPushButton.h"
@@ -15,18 +17,30 @@
 class RouletteDialog : public QDialog {
     public:
         RouletteDialog(const int total, const int win, const int attempts, QWidget *parent = nullptr);
-
-        // void close();
     private:
         int spin_duration;
+        
+        int attempts;
 
         QJsonObject config;
 
+        QList<int> win_buttons;
+
+        QList<QRoundPushButton*> buttons;
+
+        QMediaPlayer* spin_sound;
+
+        QMediaPlayer* shot_sound;
+
+        QMediaPlayer* empty_sound;
+
+        QRoundPushButton* close_button;
+
         QTimer timer;
 
-        QVector<QRoundPushButton*> buttons;
+        void init_sounds();
 
-        int get_sound_duration(const QString& file_path) const;
+        void stop_sounds();
 
         void place_buttons(const int r, const int total, const int button_size, const int window_size);
 
@@ -44,5 +58,5 @@ class RouletteDialog : public QDialog {
 
         void closeEvent(QCloseEvent* event);
 
-        // void mousePressEvent(click_pos);
+        void mousePressEvent(QMouseEvent* event);
 };
