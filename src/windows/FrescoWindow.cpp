@@ -200,6 +200,9 @@ void FrescoWindow::set_evil_style() {
 
 void FrescoWindow::start_timer() {
     this->timer.stop();
+    if (this->ui.name_combo_box->currentText() == this->config["fresco_name_combo_box_placeholder"].toString() || this->ui.question_label->text() == "") {
+        return;
+    }
     if (this->time_by_name[this->ui.name_combo_box->currentText()] == 0) {
         this->set_evil_style();
         return;
