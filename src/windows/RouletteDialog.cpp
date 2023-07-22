@@ -10,6 +10,7 @@
 #include <QFontDatabase>
 #include <QKeySequence>
 #include <QMediaPlayer>
+#include <QSoundEffect>
 #include <QRect>
 #include <QRegion>
 #include <QShowEvent>
@@ -59,20 +60,18 @@ RouletteDialog::RouletteDialog(const int total, const int win, const int attempt
 }
 
 void RouletteDialog::init_sounds() {
-    this->spin_sound = new QMediaPlayer(this);
-    this->shot_sound = new QMediaPlayer(this);
-    this->empty_sound = new QMediaPlayer(this);
+    this->spin_sound = new QSoundEffect(this);
+    this->shot_sound = new QSoundEffect(this);
+    this->empty_sound = new QSoundEffect(this);
 
-    this->spin_sound->setSource(QUrl("qrc:/spin_sound"));
-    this->shot_sound->setSource(QUrl("qrc:/shot_sound"));
-    this->empty_sound->setSource(QUrl("qrc:/empty_sound"));
+    this->spin_sound->setSource(QUrl("qrc:spin_sound"));
+    this->shot_sound->setSource(QUrl("qrc:shot_sound"));
+    this->empty_sound->setSource(QUrl("qrc:empty_sound"));
 
-    this->spin_duration = this->spin_sound->duration();
-
-    QAudioOutput* audioOutput = new QAudioOutput;
-    this->spin_sound->setAudioOutput(audioOutput);
-    this->shot_sound->setAudioOutput(audioOutput);
-    this->empty_sound->setAudioOutput(audioOutput);
+    QMediaPlayer* spin_player = new QMediaPlayer;
+    spin_player->setSource(QUrl("qrc:spin_sound"));
+    this->total_spin_duration = spin_player->duration();
+    this->current_spin_duration = spin_player->duration();
 }
 
 void RouletteDialog::stop_sounds() {
@@ -126,8 +125,8 @@ void RouletteDialog::spin_buttons(const int r, const int total, const int button
 
     const double angle = 2 * M_PI / total;
     for (int i = 0; i < this->buttons.size(); i++) {
-        const double x = r * std::cos(angle * i + this->spin_offset(i, this->spin_sound->duration() - this->spin_duration)) + (window_size - button_size) / 2;
-        const double y = r * std::sin(angle * i + this->spin_offset(i, this->spin_sound->duration() - this->spin_duration)) + (window_size - button_size) / 2;
+        const double x = r * std::cos(angle * i + this->spin_offset(i, this->total_spin_sound - this->spin_duration)) + (window_size - button_size) / 2;
+        const double y = r * std::sin(angle * i + this->spin_offset(i, this->total_spin_sound - this->spin_duration)) + (window_size - button_size) / 2;
         this->buttons[i]->move(x, y);
     }
 }
