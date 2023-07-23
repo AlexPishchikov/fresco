@@ -12,6 +12,7 @@
 #include <QRegularExpression>
 #include <QString>
 #include <QStringList>
+#include <QUrl>
 #include <QWidget>
 
 
@@ -98,6 +99,28 @@ void DownloadDialog::load_table_from_file() {
 
     this->run_loading_gif();
 
+    QFile table_file(file_path);
+    table_file.open(QFile::ReadOnly);
+
+    auto file_data = QString(table_file.readAll()).split(',');
+    const QRegularExpression regex("\"[^\"]+\"");
+
+    qDebug() << file_data;
+
+    for (int i = 0; i < file_data.size(); i++) {
+        if (regex.match(file_data[i]).hasMatch()) {
+            file_data[i] = file_data[i].replace('\n', ' ');
+        }
+    }
+
+    qDebug() << file_data;
+
+    table_file.close();
+    table_file.open(QFile::WriteOnly);
+
+    table_file.write(file_data.join(',').toUtf8());
+    table_file.close();
+
     if (this->check_table_structure(file_path)) {
         this->show_fresco_window(file_path);
     }
@@ -128,7 +151,7 @@ void DownloadDialog::load_table_by_url(const bool cache) {
     const QString table_id = this->get_table_id_from_url(this->ui.url_line_edit->text());
     const QString sheet_id = this->get_sheet_id_from_url(this->ui.url_line_edit->text());
 
-    const QString load_table_url = QString("https://docs.google.com/spreadsheets/d/%1/export?format=csv&id=%1&gid=%2").arg(table_id, sheet_id);
+    const QUrl load_table_url = QString("https://docs.google.com/spreadsheets/d/%1/export?format=csv&id=%1&gid=%2").arg(table_id, sheet_id);
 
     connect(&this->worker, &DownloadWorker::finished, this, [=]{this->update_cache(cache);});
     this->worker.download(load_table_url, this->config["download_dialog_folder_name"].toString());

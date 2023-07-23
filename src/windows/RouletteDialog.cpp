@@ -115,18 +115,18 @@ void RouletteDialog::set_buttons_labels() {
 }
 
 void RouletteDialog::spin_buttons(const int r, const int total, const int button_size, const int window_size) {
-    if (this->spin_duration <= 0) {
+    if (this->current_spin_duration <= 0) {
         this->timer.stop();
         this->set_buttons_enabled(true);
         return;
     }
 
-    this->spin_duration -= this->timer.interval();
+    this->current_spin_duration -= this->timer.interval();
 
     const double angle = 2 * M_PI / total;
     for (int i = 0; i < this->buttons.size(); i++) {
-        const double x = r * std::cos(angle * i + this->spin_offset(i, this->total_spin_sound - this->spin_duration)) + (window_size - button_size) / 2;
-        const double y = r * std::sin(angle * i + this->spin_offset(i, this->total_spin_sound - this->spin_duration)) + (window_size - button_size) / 2;
+        const double x = r * std::cos(angle * i + this->spin_offset(i, this->total_spin_duration - this->current_spin_duration)) + (window_size - button_size) / 2;
+        const double y = r * std::sin(angle * i + this->spin_offset(i, this->total_spin_duration - this->current_spin_duration)) + (window_size - button_size) / 2;
         this->buttons[i]->move(x, y);
     }
 }

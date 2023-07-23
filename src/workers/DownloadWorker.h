@@ -6,6 +6,7 @@
 #include <QScopedPointer>
 #include <QScopedPointerDeleteLater>
 #include <QString>
+#include <QUrl>
 
 
 class DownloadWorker : public QObject {
@@ -14,7 +15,7 @@ class DownloadWorker : public QObject {
         void finished();
     public:
         QString get_file_path() const;
-        void download(const QString &load_table_url, const QString &save_path);
+        void download(const QUrl &load_table_url, const QString &save_path);
     private:
         QString file_path;
 

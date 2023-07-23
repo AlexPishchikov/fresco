@@ -4,6 +4,7 @@
 #include <QMimeData>
 #include <QRegularExpression>
 #include <QString>
+#include <QUrl>
 
 #include "DownloadWorker.h"
 
@@ -11,7 +12,7 @@ QString DownloadWorker::get_file_path() const {
     return this->file_path;
 }
 
-void DownloadWorker::download(const QString &load_table_url, const QString &save_path) {
+void DownloadWorker::download(const QUrl &load_table_url, const QString &save_path) {
     this->file_path = "";
 
     QNetworkRequest request = QNetworkRequest(load_table_url);
