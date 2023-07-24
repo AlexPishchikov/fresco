@@ -58,6 +58,8 @@ class FrescoWindow : public QMainWindow {
 
         void cells_count_spin_box_changed();
 
+        void win_cells_count_spin_box_changed();
+
         void show_roulette_dialog();
 
         void clear();

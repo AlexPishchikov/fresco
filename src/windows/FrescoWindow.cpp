@@ -40,10 +40,11 @@ void FrescoWindow::init_ui() {
 
     this->setWindowTitle(this->config["fresco_window_title"].toString());
     this->ui.cells_count_spin_box->setValue(this->config["fresco_cells_count_init_value"].toInt());
-    this->cells_count_spin_box_changed();
-
     this->ui.win_cells_count_spin_box->setValue(this->config["fresco_win_cells_count_init_value"].toInt());
     this->ui.attempts_count_spin_box->setValue(this->config["fresco_attempts_count_init_value"].toInt());
+
+    this->cells_count_spin_box_changed();
+    this->win_cells_count_spin_box_changed();
 
     const QString lobster_font = QFontDatabase::applicationFontFamilies(QFontDatabase::addApplicationFont(":lobster_font"))[0];
 
@@ -81,6 +82,7 @@ void FrescoWindow::create_connections() {
     connect(this->ui.start_timer_button, &QPushButton::clicked, this, [=]{this->start_timer();});
     connect(this->ui.stop_timer_button, &QPushButton::clicked, this, [=]{this->timer.stop();});
     connect(this->ui.cells_count_spin_box, QOverload<int>::of(&QSpinBox::valueChanged), this, [=]{this->cells_count_spin_box_changed();});
+    connect(this->ui.win_cells_count_spin_box, QOverload<int>::of(&QSpinBox::valueChanged), this, [=]{this->win_cells_count_spin_box_changed();});
 
     connect(&this->timer, &QTimer::timeout, this, [=]{this->update_remaining_time_label();});
 }
@@ -228,7 +230,11 @@ void FrescoWindow::update_remaining_time_label() {
 
 void FrescoWindow::cells_count_spin_box_changed() {
     this->ui.win_cells_count_spin_box->setMaximum(this->ui.cells_count_spin_box->value());
-    this->ui.attempts_count_spin_box->setMaximum(this->ui.cells_count_spin_box->value());
+    this->ui.attempts_count_spin_box->setMaximum(std::min(this->ui.cells_count_spin_box->value(), this->ui.win_cells_count_spin_box->value()));
+}
+
+void FrescoWindow::win_cells_count_spin_box_changed() {
+    this->ui.attempts_count_spin_box->setMaximum(this->ui.win_cells_count_spin_box->value());
 }
 
 void FrescoWindow::show_roulette_dialog() {
