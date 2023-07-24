@@ -28,7 +28,7 @@ FrescoWindow::FrescoWindow(const QString &data_file_path, const QString &rating_
     this->config = load_config("res/default_config/FrescoWindowConfig.json");
     this->timer.setInterval(this->config["fresco_time_interval"].toInt());
 
-    this->current_theme = current_theme;
+    this->set_theme(current_theme);
 
     this->init_ui();
     this->create_connections();
@@ -39,7 +39,6 @@ void FrescoWindow::init_ui() {
     ui.setupUi(this);
 
     this->setFixedSize(this->size());
-    this->switch_theme(this->current_theme);
 
     this->setWindowTitle(this->config["fresco_window_title"].toString());
     this->ui.cells_count_spin_box->setValue(this->config["fresco_cells_count_init_value"].toInt());
@@ -76,7 +75,7 @@ void FrescoWindow::init_ui() {
 }
 
 void FrescoWindow::create_connections() {
-    connect(this->ui.switch_theme_button, &QPushButton::clicked, this, [=]{this->switch_theme(this->current_theme == Theme::dark ? Theme::light : Theme::dark);});
+    connect(this->ui.switch_theme_button, &QPushButton::clicked, this, [=]{this->set_theme(static_cast<Theme>((this->current_theme + 1) % Theme::count));});
     connect(this->ui.clear_button, &QPushButton::clicked, this, [=]{this->clear();});
     connect(this->ui.generate_riddle_button, &QPushButton::clicked, this, [=]{this->generate_riddle();});
     connect(this->ui.refresh_questions_button, &QPushButton::clicked, this, [=]{this->import_questions_from_TeX();});
@@ -263,20 +262,10 @@ void FrescoWindow::clear() {
     this->timer.stop();
 }
 
-void FrescoWindow::switch_theme(const Theme theme) {
+void FrescoWindow::set_theme(const Theme theme) {
     this->current_theme = theme;
 
-    QString theme_string;
-    switch(this->current_theme) {
-        case Theme::dark:
-            theme_string = "dark";
-            break;
-        case Theme::light:
-            theme_string = "light";
-            break;
-    }
-
-    QFile qss_file(QString(":%1_theme").arg(theme_string));
+    QFile qss_file(QString(":theme_%1").arg(this->current_theme));
     qss_file.open(QFile::ReadOnly);
     this->setStyleSheet(QLatin1String(qss_file.readAll()));
 }

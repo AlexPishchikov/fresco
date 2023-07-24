@@ -56,5 +56,5 @@ class DownloadDialog : public QDialog {
 
         void set_widgets_enabled(const bool status);
 
-        void switch_theme(const Theme theme);
+        void set_theme(const Theme theme);
 };

@@ -74,8 +74,11 @@ void RouletteDialog::init_sounds() {
 
     QMediaPlayer* spin_player = new QMediaPlayer;
     spin_player->setSource(QUrl("qrc:spin_sound"));
-    this->total_spin_duration = spin_player->duration();
-    this->current_spin_duration = spin_player->duration();
+    // this->total_spin_duration = spin_player->duration();
+    // this->current_spin_duration = spin_player->duration();
+
+    this->total_spin_duration = 2000;
+    this->current_spin_duration = 2000;
 }
 
 void RouletteDialog::stop_sounds() {

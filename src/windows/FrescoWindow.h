@@ -64,7 +64,7 @@ class FrescoWindow : public QMainWindow {
 
         void clear();
 
-        void switch_theme(const Theme theme);
+        void set_theme(const Theme theme);
 
         bool is_name(const QString &name) const;
 

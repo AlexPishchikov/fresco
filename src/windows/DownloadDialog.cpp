@@ -15,7 +15,6 @@
 #include <QUrl>
 #include <QWidget>
 
-
 #include "../enums.h"
 #include "../load_config/load_config.h"
 #include "../workers/DownloadWorker.h"
@@ -39,9 +38,8 @@ DownloadDialog::DownloadDialog(QWidget *parent) : QDialog(parent) {
     connect(this->ui.load_from_file_button, &QPushButton::clicked, this, [=]{this->load_table_from_file();});
     connect(this->ui.load_from_folder_button, &QPushButton::clicked, this, [=]{this->load_table_from_cache();});
 
-    this->current_theme = Theme::dark;
-    this->switch_theme(this->current_theme);
-    connect(this->ui.switch_theme_button, &QPushButton::clicked, this, [=]{this->switch_theme(this->current_theme == Theme::dark ? Theme::light : Theme::dark);});
+    this->set_theme(Theme::dark);
+    connect(this->ui.switch_theme_button, &QPushButton::clicked, this, [=]{this->set_theme(static_cast<Theme>((this->current_theme + 1) % Theme::count));});
 
     QRadialGradient gradient = QRadialGradient(QPoint(339, 20), 320, QPoint(319, 20), 20);
     gradient.setColorAt(0.0, QColor(0, 0, 0, 255));
@@ -267,22 +265,12 @@ void DownloadDialog::set_widgets_enabled(const bool status) {
     this->ui.switch_theme_button->setEnabled(status);
 }
 
-void DownloadDialog::switch_theme(const Theme theme) {
+void DownloadDialog::set_theme(const Theme theme) {
     this->current_theme = theme;
 
-    QString theme_string;
-    switch(this->current_theme) {
-        case Theme::dark:
-            theme_string = "dark";
-            break;
-        case Theme::light:
-            theme_string = "light";
-            break;
-    }
+    this->loading_gif.setFileName(QString(":load_gif_%1").arg(this->current_theme));
 
-    this->loading_gif.setFileName(QString(":load_gif_%1").arg(theme_string));
-
-    QFile qss_file(QString(":%1_theme").arg(theme_string));
+    QFile qss_file(QString(":theme_%1").arg(this->current_theme));
     qss_file.open(QFile::ReadOnly);
     this->setStyleSheet(QLatin1String(qss_file.readAll()));
 }

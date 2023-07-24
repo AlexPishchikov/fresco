@@ -1,3 +1,3 @@
 #pragma once
 
-enum Theme {dark, light};
+enum Theme {dark, light, count};

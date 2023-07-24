@@ -3,8 +3,8 @@
     <qresource>
         <file alias="lobster_font">res/fonts/Lobster-Regular.ttf</file>
 
-        <file alias="load_gif_dark">res/gifs/load_dark.gif</file>
-        <file alias="load_gif_light">res/gifs/load_light.gif</file>
+        <file alias="load_gif_0">res/gifs/load_dark.gif</file>
+        <file alias="load_gif_1">res/gifs/load_light.gif</file>
 
         <file alias="arrow_down_big_dark_icon">res/icons/arrow_down_big_dark.png</file>
         <file alias="arrow_down_big_dark_disabled_icon">res/icons/arrow_down_big_dark_disabled.png</file>
@@ -27,7 +27,7 @@
         <file alias="shot_sound">res/sounds/shot.wav</file>
         <file alias="spin_sound">res/sounds/spin.wav</file>
 
-        <file alias="dark_theme">res/styles/dark.qss</file>
-        <file alias="light_theme">res/styles/light.qss</file>
+        <file alias="theme_0">res/styles/dark.qss</file>
+        <file alias="theme_1">res/styles/light.qss</file>
     </qresource>
 </RCC>
