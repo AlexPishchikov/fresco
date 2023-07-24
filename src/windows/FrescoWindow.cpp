@@ -2,6 +2,7 @@
 #include <chrono>
 #include <random>
 
+#include <QAudioOutput>
 #include <QColor>
 #include <QFont>
 #include <QFontDatabase>
@@ -12,6 +13,7 @@
 #include <QJSValueList>
 #include <QHash>
 #include <QMainWindow>
+#include <QMediaPlayer>
 #include <QPixmap>
 #include <QPushButton>
 #include <QSpinBox>
@@ -30,9 +32,20 @@ FrescoWindow::FrescoWindow(const QString &data_file_path, const QString &rating_
 
     this->set_theme(current_theme);
 
+    this->init_sound();
     this->init_ui();
     this->create_connections();
     this->parse_csv(data_file_path, rating_col_name);
+}
+
+
+void FrescoWindow::init_sound() {
+    QMediaPlayer* spin_player = new QMediaPlayer;
+    QAudioOutput* audio_output = new QAudioOutput;
+    audio_output->setMuted(true);
+    spin_player->setAudioOutput(audio_output);
+    spin_player->setSource(QUrl("qrc:spin_sound"));
+    connect(spin_player, &QMediaPlayer::durationChanged, this, [=]{this->spin_sound_duration = spin_player->duration();});
 }
 
 void FrescoWindow::init_ui() {
@@ -240,11 +253,14 @@ void FrescoWindow::win_cells_count_spin_box_changed() {
 }
 
 void FrescoWindow::show_roulette_dialog() {
-    if (roulette != nullptr) {
-        roulette->close();
+    if (this->roulette != nullptr) {
+        this->roulette->close();
     }
-    roulette = new RouletteDialog(this->ui.cells_count_spin_box->value(), this->ui.win_cells_count_spin_box->value(), this->ui.attempts_count_spin_box->value());
-    roulette->show();
+    this->roulette = new RouletteDialog(this->spin_sound_duration,
+                                        this->ui.cells_count_spin_box->value(),
+                                        this->ui.win_cells_count_spin_box->value(),
+                                        this->ui.attempts_count_spin_box->value());
+    this->roulette->show();
 }
 
 void FrescoWindow::clear() {

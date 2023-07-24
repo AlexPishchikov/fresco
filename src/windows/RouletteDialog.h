@@ -16,7 +16,7 @@
 
 class RouletteDialog : public QDialog {
     public:
-        RouletteDialog(const int total, const int win, const int attempts, QWidget *parent = nullptr);
+        RouletteDialog(const int spin_sound_duration, const int total, const int win, const int attempts, QWidget *parent = nullptr);
     private:
         int current_spin_duration;
 
@@ -40,7 +40,7 @@ class RouletteDialog : public QDialog {
 
         QTimer timer;
 
-        void init_sounds();
+        void init_sounds(const int spin_sound_duration);
 
         void stop_sounds();
 
@@ -51,8 +51,6 @@ class RouletteDialog : public QDialog {
         void spin_buttons(const int r, const int total, const int button_size, const int window_size);
 
         void shoot(const int button_number);
-
-        double spin_offset(const int i, const int t) const;
 
         void set_buttons_enabled(const bool status);
 

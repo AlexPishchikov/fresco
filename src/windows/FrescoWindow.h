@@ -14,6 +14,8 @@ class FrescoWindow : public QMainWindow {
     public:
         FrescoWindow(const QString &data_file_name, const QString &rating_col_name, const Theme current_theme, QWidget *parent = nullptr);
     private:
+        int spin_sound_duration;
+
         QHash<QString, int> time_by_name;
 
         QJsonObject config;
@@ -29,6 +31,8 @@ class FrescoWindow : public QMainWindow {
         Theme current_theme;
 
         Ui::FrescoWindowUi ui;
+
+        void init_sound();
 
         void init_ui();
 

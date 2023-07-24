@@ -3,7 +3,6 @@
 #include <cmath>
 #include <random>
 
-#include <QAudioOutput>
 #include <QCloseEvent>
 #include <QDialog>
 #include <QFont>
@@ -12,7 +11,6 @@
 #include <QJSValue>
 #include <QJSValueList>
 #include <QKeySequence>
-#include <QMediaPlayer>
 #include <QSoundEffect>
 #include <QRect>
 #include <QRegion>
@@ -28,14 +26,14 @@
 #include "RouletteDialog.h"
 
 
-RouletteDialog::RouletteDialog(const int total, const int win, const int attempts, QWidget *parent) : QDialog(parent) {
+RouletteDialog::RouletteDialog(const int spin_sound_duration, const int total, const int win, const int attempts, QWidget *parent) : QDialog(parent) {
     this->attempts = attempts;
 
     this->config = load_config("res/default_config/RouletteDialogConfig.json");
 
     this->setWindowFlag(Qt::FramelessWindowHint);
 
-    this->init_sounds();
+    this->init_sounds(spin_sound_duration);
 
     const int button_size = this->config["roulette_button_size"].toInt();
     const int button_margin = this->config["roulette_button_margin"].toInt();
@@ -63,7 +61,7 @@ RouletteDialog::RouletteDialog(const int total, const int win, const int attempt
     std::sample(numbers.begin(), numbers.end(), std::back_inserter(this->win_buttons), win, std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count()));
 }
 
-void RouletteDialog::init_sounds() {
+void RouletteDialog::init_sounds(const int spin_sound_duration) {
     this->spin_sound = new QSoundEffect(this);
     this->shot_sound = new QSoundEffect(this);
     this->empty_sound = new QSoundEffect(this);
@@ -72,13 +70,8 @@ void RouletteDialog::init_sounds() {
     this->shot_sound->setSource(QUrl("qrc:shot_sound"));
     this->empty_sound->setSource(QUrl("qrc:empty_sound"));
 
-    QMediaPlayer* spin_player = new QMediaPlayer;
-    spin_player->setSource(QUrl("qrc:spin_sound"));
-    // this->total_spin_duration = spin_player->duration();
-    // this->current_spin_duration = spin_player->duration();
-
-    this->total_spin_duration = 2000;
-    this->current_spin_duration = 2000;
+    this->total_spin_duration = spin_sound_duration;
+    this->current_spin_duration = spin_sound_duration;
 }
 
 void RouletteDialog::stop_sounds() {
@@ -128,12 +121,17 @@ void RouletteDialog::spin_buttons(const int r, const int total, const int button
         return;
     }
 
+    QJSEngine engine;
+    QJSValue fn = engine.evaluate(QString("(function(i, t) { return %1; })").arg(this->config["roulette_spin_function"].toString()));
+
     this->current_spin_duration -= this->timer.interval();
 
     const double angle = 2 * M_PI / total;
     for (int i = 0; i < this->buttons.size(); i++) {
-        const double x = r * std::cos(angle * i + this->spin_offset(i, this->total_spin_duration - this->current_spin_duration)) + (window_size - button_size) / 2;
-        const double y = r * std::sin(angle * i + this->spin_offset(i, this->total_spin_duration - this->current_spin_duration)) + (window_size - button_size) / 2;
+        QJSValueList args;
+        args << i << this->total_spin_duration - this->current_spin_duration;
+        const double x = r * std::cos(angle * i + fn.call(args).toString().toDouble()) + (window_size - button_size) / 2;
+        const double y = r * std::sin(angle * i + fn.call(args).toString().toDouble()) + (window_size - button_size) / 2;
         this->buttons[i]->move(x, y);
     }
 }
@@ -195,15 +193,6 @@ void RouletteDialog::shoot(const int button_number) {
             }
         }
     }
-}
-
-double RouletteDialog::spin_offset(const int i, const int t) const {
-    QJSEngine engine;
-    QJSValue fn = engine.evaluate(QString("(function(i, t) { return %1; })").arg(this->config["roulette_spin_function"].toString()));
-    QJSValueList args;
-    args << i << t;
-
-    return fn.call(args).toString().toDouble();
 }
 
 void RouletteDialog::set_buttons_enabled(const bool status) {
