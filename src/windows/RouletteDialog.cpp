@@ -8,6 +8,9 @@
 #include <QDialog>
 #include <QFont>
 #include <QFontDatabase>
+#include <QJSEngine>
+#include <QJSValue>
+#include <QJSValueList>
 #include <QKeySequence>
 #include <QMediaPlayer>
 #include <QSoundEffect>
@@ -192,8 +195,12 @@ void RouletteDialog::shoot(const int button_number) {
 }
 
 double RouletteDialog::spin_offset(const int i, const int t) const {
-    return 15.0 * powf(M_E, -powf(t, 2.0) / powf(2.0, 18.0));
-    // return t / 400.0;
+    QJSEngine engine;
+    QJSValue fn = engine.evaluate(QString("(function(i, t) { return %1; })").arg(this->config["roulette_spin_function"].toString()));
+    QJSValueList args;
+    args << i << t;
+
+    return fn.call(args).toString().toDouble();
 }
 
 void RouletteDialog::set_buttons_enabled(const bool status) {

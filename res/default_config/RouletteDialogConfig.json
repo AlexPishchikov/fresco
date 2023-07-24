@@ -8,6 +8,5 @@
     "roulette_close_button_win_text" : "повезло\nповезло",
     "roulette_close_button_lose_text" : "Выход",
     "roulette_spin_step" : 16,
-    "roulette_spin_function_horisontal" : "15 * math.exp(-t ** 2 / 2 ** 18)",
-    "roulette_spin_function_vertical" : "15 * math.exp(-t ** 2 / 2 ** 18)"
+    "roulette_spin_function" : "15 * Math.exp(-Math.pow(t, 2) / Math.pow(2, 18))"
 }

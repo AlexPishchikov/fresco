@@ -7,6 +7,9 @@
 #include <QFontDatabase>
 #include <QFile>
 #include <QFileDialog>
+#include <QJSEngine>
+#include <QJSValue>
+#include <QJSValueList>
 #include <QHash>
 #include <QMainWindow>
 #include <QPixmap>
@@ -283,9 +286,12 @@ bool FrescoWindow::is_name(const QString &name) const {
 }
 
 unsigned int FrescoWindow::calculate_time(const int rating) const {
-    // expression = eval(self.config.calculate_time_function)
-    // return max(0, expression)
-    return rating;
+    QJSEngine engine;
+    QJSValue fn = engine.evaluate(QString("(function(rating) { return %1; })").arg(this->config["fresco_calculate_time_function"].toString()));
+    QJSValueList arg;
+    arg << rating;
+
+    return std::max(0, fn.call(arg).toInt());
 }
 
 QString FrescoWindow::last_letter(const int time) const {
