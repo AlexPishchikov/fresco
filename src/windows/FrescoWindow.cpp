@@ -249,7 +249,7 @@ void FrescoWindow::cells_count_spin_box_changed() {
 }
 
 void FrescoWindow::win_cells_count_spin_box_changed() {
-    this->ui.attempts_count_spin_box->setMaximum(this->ui.win_cells_count_spin_box->value());
+    this->ui.attempts_count_spin_box->setMaximum(std::max(this->ui.win_cells_count_spin_box->value(), 1));
 }
 
 void FrescoWindow::show_roulette_dialog() {
