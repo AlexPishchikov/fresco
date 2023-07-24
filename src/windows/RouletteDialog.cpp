@@ -52,11 +52,12 @@ RouletteDialog::RouletteDialog(const int total, const int win, const int attempt
 
     this->set_buttons_enabled(false);
 
+    QList<int> numbers;
     for (int i = 0; i < total; i++) {
-        this->win_buttons.push_back(i);
+        numbers.push_back(i);
     }
-    std::shuffle(this->win_buttons.begin(), this->win_buttons.end(), std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count()));
-    this->win_buttons = this->win_buttons.mid(total - win);
+
+    std::sample(numbers.begin(), numbers.end(), std::back_inserter(this->win_buttons), win, std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count()));
 }
 
 void RouletteDialog::init_sounds() {
@@ -110,7 +111,7 @@ void RouletteDialog::set_buttons_labels() {
     for (int i = 0; i < this->buttons.size(); i++) {
         this->buttons[i]->setText(letters[i]);
         this->buttons[i]->setShortcut(QKeySequence(letters[i]));
-        this->buttons[i]->setFont(QFont("Comic Sans MS", this->config["roulette_roulette_buttons_font_size"].toInt()));
+        this->buttons[i]->setFont(QFont("Comic Sans MS", this->config["roulette_buttons_font_size"].toInt()));
     }
 }
 

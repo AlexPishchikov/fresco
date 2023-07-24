@@ -1,10 +1,8 @@
 {
-    "roulette_window_height_mult" : 1.0,
-    "roulette_window_width_mult" : 1.0,
     "roulette_shot_hole_label_size" : 240,
     "roulette_button_size" : 100,
     "roulette_button_margin" : 6,
-    "roulette_roulette_buttons_font_size" : 40,
+    "roulette_buttons_font_size" : 40,
     "roulette_close_button_font_size" : 35,
     "roulette_close_button_init_text" : "Я не хочу\nумирац",
     "roulette_close_button_win_text" : "повезло\nповезло",

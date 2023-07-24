@@ -165,18 +165,6 @@
 Конфиг для рулетки.
 #### Ключи:
 
-- `roulette_window_height_mult`
-
-    **Тип:** `float`
-
-    **Описание:** Множитель для ширины окна.
-
-- `roulette_window_width_mult`
-
-    **Тип:** `float`
-
-    **Описание:** Множитель для высоты окна.
-
 - `roulette_shot_hole_label_size`
 
     **Тип:** `int`
@@ -195,7 +183,7 @@
 
     **Описание:** Отступ кнопок рулетки.
 
-- `roulette_roulette_buttons_font_size`
+- `roulette_buttons_font_size`
 
     **Тип:** `int`
 
