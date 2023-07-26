@@ -30,11 +30,13 @@ class FrescoWindow : public QMainWindow {
 
         QTimer timer;
 
-        RouletteDialog* roulette;
+        RouletteDialog* roulette = nullptr;
 
         Theme current_theme;
 
         Ui::FrescoWindowUi ui;
+
+        void closeEvent(QCloseEvent* event);
 
         bool is_name(const QString &name) const;
 

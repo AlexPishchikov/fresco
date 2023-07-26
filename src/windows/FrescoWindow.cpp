@@ -40,6 +40,11 @@ FrescoWindow::FrescoWindow(const QString &data_file_path, const QString &rating_
     this->set_theme(current_theme);
 }
 
+void FrescoWindow::closeEvent(QCloseEvent* event) {
+    QMainWindow::closeEvent(event);
+    QApplication::closeAllWindows();
+}
+
 bool FrescoWindow::is_name(const QString &name) const {
     return name != "";
 }

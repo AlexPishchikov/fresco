@@ -229,8 +229,8 @@ void DownloadDialog::set_widgets_enabled(const bool status) {
 
 void DownloadDialog::show_fresco_window(const QString &data_file_name) {
     this->close();
-    static FrescoWindow fresco_window(data_file_name, this->config["download_dialog_rating_col_name"].toString(), this->current_theme);
-    fresco_window.show();
+    FrescoWindow* fresco_window = new FrescoWindow(data_file_name, this->config["download_dialog_rating_col_name"].toString(), this->current_theme);
+    fresco_window->show();
 }
 
 void DownloadDialog::update_cache(const bool cache) {
