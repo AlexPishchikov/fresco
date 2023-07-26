@@ -5,7 +5,7 @@ QWidget {
 }
 
 QLabel#const_upper_label, QLabel#question_label, QLabel#remaining_time_label, QLabel#const_lower_label, QLabel#total_time_label {
-    color: #FFFFFF;
+    color: #000000;
 }
 
 QLabel#status_label {

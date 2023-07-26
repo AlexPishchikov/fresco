@@ -19,8 +19,10 @@
         <file alias="dark_theme_icon">res/icons/dark_theme_icon.png</file>
         <file alias="light_theme_icon">res/icons/light_theme_icon.png</file>
 
-        <file alias="evil_fresco_image">res/images/evil_fresco.png</file>
-        <file alias="good_fresco_image">res/images/good_fresco.png</file>
+        <file alias="evil_fresco_image_0">res/images/evil_fresco_dark.png</file>
+        <file alias="good_fresco_image_0">res/images/good_fresco_dark.png</file>
+        <file alias="evil_fresco_image_1">res/images/evil_fresco_light.png</file>
+        <file alias="good_fresco_image_1">res/images/good_fresco_light.png</file>
         <file alias="shot_hole_image">res/images/shot_hole.png</file>
 
         <file alias="empty_sound">res/sounds/empty.wav</file>

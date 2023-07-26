@@ -30,12 +30,14 @@ FrescoWindow::FrescoWindow(const QString &data_file_path, const QString &rating_
     this->config = load_config("res/default_config/FrescoWindowConfig.json");
     this->timer.setInterval(this->config["fresco_time_interval"].toInt());
 
-    this->set_theme(current_theme);
+    this->evil_style = false;
 
     this->init_sound();
     this->init_ui();
     this->create_connections();
     this->parse_csv(data_file_path, rating_col_name);
+
+    this->set_theme(current_theme);
 }
 
 
@@ -80,8 +82,6 @@ void FrescoWindow::init_ui() {
     this->ui.question_label->setWordWrap(true);
     this->ui.const_upper_label->hide();
     this->ui.const_lower_label->hide();
-
-    this->ui.img_label->setPixmap(QPixmap(":good_fresco_image"));
 
     this->ui.name_combo_box->clear();
     this->ui.name_combo_box->addItem(this->config["fresco_name_combo_box_placeholder"].toString());
@@ -159,7 +159,7 @@ void FrescoWindow::generate_riddle() {
 
     this->timer.stop();
 
-    this->ui.img_label->setPixmap(QPixmap(":good_fresco_image"));
+    this->set_good_style();
 
     this->set_question_label();
     this->ui.question_label->show();
@@ -211,8 +211,14 @@ void FrescoWindow::import_questions_from_TeX() {
 }
 
 void FrescoWindow::set_evil_style() {
+    this->evil_style = true;
     this->ui.remaining_time_label->setText(this->config["fresco_time_over_text"].toString());
-    this->ui.img_label->setPixmap(QPixmap(":evil_fresco_image"));
+    this->ui.img_label->setPixmap(QPixmap(QString(":evil_fresco_image_%1").arg(this->current_theme)));
+}
+
+void FrescoWindow::set_good_style() {
+    this->evil_style = false;
+    this->ui.img_label->setPixmap(QPixmap(QString(":good_fresco_image_%1").arg(this->current_theme)));
 }
 
 void FrescoWindow::start_timer() {
@@ -225,7 +231,7 @@ void FrescoWindow::start_timer() {
         return;
     }
 
-    this->ui.img_label->setPixmap(QPixmap(":good_fresco_image"));
+    this->set_good_style();
     this->init_remaining_time_label();
 
     this->timer.start();
@@ -264,6 +270,8 @@ void FrescoWindow::show_roulette_dialog() {
 }
 
 void FrescoWindow::clear() {
+    this->set_good_style();
+
     this->setWindowTitle(this->config["fresco_window_title"].toString());
 
     this->ui.const_upper_label->hide();
@@ -272,7 +280,6 @@ void FrescoWindow::clear() {
     this->ui.remaining_time_label->hide();
     this->ui.total_time_label->hide();
 
-    this->ui.img_label->setPixmap(QPixmap(":good_fresco_image"));
     this->ui.name_combo_box->setCurrentIndex(0);
 
     this->timer.stop();
@@ -280,6 +287,13 @@ void FrescoWindow::clear() {
 
 void FrescoWindow::set_theme(const Theme theme) {
     this->current_theme = theme;
+
+    if (this->evil_style) {
+        this->set_evil_style();
+    }
+    else {
+        this->set_good_style();
+    }
 
     QFile qss_file(QString(":theme_%1").arg(this->current_theme));
     qss_file.open(QFile::ReadOnly);

@@ -14,6 +14,8 @@ class FrescoWindow : public QMainWindow {
     public:
         FrescoWindow(const QString &data_file_name, const QString &rating_col_name, const Theme current_theme, QWidget *parent = nullptr);
     private:
+        bool evil_style;
+
         int spin_sound_duration;
 
         QHash<QString, int> time_by_name;
@@ -55,6 +57,8 @@ class FrescoWindow : public QMainWindow {
         void import_questions_from_TeX();
 
         void set_evil_style();
+
+        void set_good_style();
 
         void start_timer();
 
