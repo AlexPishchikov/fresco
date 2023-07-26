@@ -53,15 +53,52 @@ DownloadDialog::DownloadDialog(QWidget *parent) : QDialog(parent) {
     this->fill_combo_box();
 }
 
-void DownloadDialog::init_cached_tables_dir() const {
-    if (!QFileInfo::exists(this->config["download_dialog_folder_name"].toString())) {
-        QDir().mkdir(this->config["download_dialog_folder_name"].toString());
-    }
+bool DownloadDialog::check_table_structure(const QString &file_path) const {
+    QFile table_file(file_path);
+    table_file.open(QFile::ReadOnly);
+    return QString(table_file.readLine()).split(',').contains(this->config["download_dialog_rating_col_name"].toString());
+}
 
-    if (!QFileInfo::exists(QString("%1.tables_list").arg(this->config["download_dialog_folder_name"].toString()))) {
-        QFile tables_list_file(QString("%1.tables_list").arg(this->config["download_dialog_folder_name"].toString()));
-        tables_list_file.open(QFile::WriteOnly);
+bool DownloadDialog::is_correct_url() const {
+    if (this->is_url() && this->ui.url_line_edit->text().split('=').size() >= 2 && this->ui.url_line_edit->text().split('/').size() >= 2) {
+        bool is_number;
+        this->ui.url_line_edit->text().split('=')[1].toUInt(&is_number, 10);
+        return is_number;
     }
+    return false;
+}
+
+bool DownloadDialog::is_url() const {
+    const QRegularExpression regex("^(?:https://|http://)?(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?))|(?:/?|[/?]\S+)$");
+    return regex.match(this->ui.url_line_edit->text()).hasMatch();
+}
+
+QString DownloadDialog::get_sheet_id_from_url(const QString &url) const {
+    return url.split('=')[1];
+}
+
+QString DownloadDialog::get_table_id_from_url(const QString &url) const {
+    const QStringList url_split = url.split('/');
+    return url_split[url_split.size() - 2];
+}
+
+QString DownloadDialog::get_url_from_file(const QString &filename) const {
+    const int line_index = get_tables_list().indexOf(filename);
+
+    QFile tables_list_file(QString("%1.tables_list").arg(this->config["download_dialog_folder_name"].toString()));
+    tables_list_file.open(QFile::ReadOnly);
+
+    QString line;
+    int current_line_index = 0;
+    while (!tables_list_file.atEnd()) {
+        const QString current_line = tables_list_file.readLine();
+        if (current_line_index == line_index) {
+            line = current_line.simplified();
+            break;
+        }
+        current_line_index++;
+    }
+    return line.split(' ').last();
 }
 
 QStringList DownloadDialog::get_tables_list() const {
@@ -87,6 +124,45 @@ void DownloadDialog::fill_combo_box() {
             this->ui.tables_combo_box->addItem(filename);
         }
     }
+}
+
+void DownloadDialog::init_cached_tables_dir() const {
+    if (!QFileInfo::exists(this->config["download_dialog_folder_name"].toString())) {
+        QDir().mkdir(this->config["download_dialog_folder_name"].toString());
+    }
+
+    if (!QFileInfo::exists(QString("%1.tables_list").arg(this->config["download_dialog_folder_name"].toString()))) {
+        QFile tables_list_file(QString("%1.tables_list").arg(this->config["download_dialog_folder_name"].toString()));
+        tables_list_file.open(QFile::WriteOnly);
+    }
+}
+
+void DownloadDialog::load_table_by_url(const bool cache) {
+    this->set_widgets_enabled(false);
+    this->run_loading_gif();
+
+    if (!this->is_correct_url()) {
+        this->ui.status_label->setText("Некорректная ссылка");
+        this->set_widgets_enabled(true);
+        return;
+    }
+
+    const QString table_id = this->get_table_id_from_url(this->ui.url_line_edit->text());
+    const QString sheet_id = this->get_sheet_id_from_url(this->ui.url_line_edit->text());
+
+    const QUrl load_table_url = QString("https://docs.google.com/spreadsheets/d/%1/export?format=csv&id=%1&gid=%2").arg(table_id, sheet_id);
+
+    connect(&this->worker, &DownloadWorker::finished, this, [=]{this->update_cache(cache);});
+    this->worker.download(load_table_url, this->config["download_dialog_folder_name"].toString());
+}
+
+void DownloadDialog::load_table_from_cache() {
+    if (this->ui.tables_combo_box->currentText() == "") {
+        return;
+    }
+
+    this->ui.url_line_edit->setText(this->get_url_from_file(this->ui.tables_combo_box->currentText()));
+    this->load_table_by_url(true);
 }
 
 void DownloadDialog::load_table_from_file() {
@@ -127,74 +203,34 @@ void DownloadDialog::load_table_from_file() {
     }
 }
 
-void DownloadDialog::load_table_from_cache() {
-    if (this->ui.tables_combo_box->currentText() == "") {
-        return;
-    }
-
-    this->ui.url_line_edit->setText(this->get_url_from_file(this->ui.tables_combo_box->currentText()));
-    this->load_table_by_url(true);
+void DownloadDialog::run_loading_gif() {
+    this->loading_gif.stop();
+    this->ui.status_label->setMovie(&this->loading_gif);
+    this->loading_gif.start();
 }
 
-void DownloadDialog::load_table_by_url(const bool cache) {
-    this->set_widgets_enabled(false);
-    this->run_loading_gif();
+void DownloadDialog::set_theme(const Theme theme) {
+    this->current_theme = theme;
 
-    if (!this->is_correct_url()) {
-        this->ui.status_label->setText("Некорректная ссылка");
-        this->set_widgets_enabled(true);
-        return;
-    }
+    this->loading_gif.setFileName(QString(":load_gif_%1").arg(this->current_theme));
 
-    const QString table_id = this->get_table_id_from_url(this->ui.url_line_edit->text());
-    const QString sheet_id = this->get_sheet_id_from_url(this->ui.url_line_edit->text());
-
-    const QUrl load_table_url = QString("https://docs.google.com/spreadsheets/d/%1/export?format=csv&id=%1&gid=%2").arg(table_id, sheet_id);
-
-    connect(&this->worker, &DownloadWorker::finished, this, [=]{this->update_cache(cache);});
-    this->worker.download(load_table_url, this->config["download_dialog_folder_name"].toString());
+    QFile qss_file(QString(":theme_%1").arg(this->current_theme));
+    qss_file.open(QFile::ReadOnly);
+    this->setStyleSheet(QLatin1String(qss_file.readAll()));
 }
 
-QString DownloadDialog::get_table_id_from_url(const QString &url) const {
-    const QStringList url_split = url.split('/');
-    return url_split[url_split.size() - 2];
+void DownloadDialog::set_widgets_enabled(const bool status) {
+    this->ui.url_line_edit->setEnabled(status);
+    this->ui.load_from_url_button->setEnabled(status);
+    this->ui.load_from_file_button->setEnabled(status);
+    this->ui.load_from_folder_button->setEnabled(status);
+    this->ui.switch_theme_button->setEnabled(status);
 }
 
-QString DownloadDialog::get_sheet_id_from_url(const QString &url) const {
-    return url.split('=')[1];
-}
-
-QString DownloadDialog::get_url_from_file(const QString &filename) const {
-    const int line_index = get_tables_list().indexOf(filename);
-
-    QFile tables_list_file(QString("%1.tables_list").arg(this->config["download_dialog_folder_name"].toString()));
-    tables_list_file.open(QFile::ReadOnly);
-
-    QString line;
-    int current_line_index = 0;
-    while (!tables_list_file.atEnd()) {
-        const QString current_line = tables_list_file.readLine();
-        if (current_line_index == line_index) {
-            line = current_line.simplified();
-            break;
-        }
-        current_line_index++;
-    }
-    return line.split(' ').last();
-}
-
-bool DownloadDialog::is_correct_url() const {
-    if (this->is_url() && this->ui.url_line_edit->text().split('=').size() >= 2 && this->ui.url_line_edit->text().split('/').size() >= 2) {
-        bool is_number;
-        this->ui.url_line_edit->text().split('=')[1].toUInt(&is_number, 10);
-        return is_number;
-    }
-    return false;
-}
-
-bool DownloadDialog::is_url() const {
-    const QRegularExpression regex("^(?:https://|http://)?(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?))|(?:/?|[/?]\S+)$");
-    return regex.match(this->ui.url_line_edit->text()).hasMatch();
+void DownloadDialog::show_fresco_window(const QString &data_file_name) {
+    this->close();
+    static FrescoWindow fresco_window(data_file_name, this->config["download_dialog_rating_col_name"].toString(), this->current_theme);
+    fresco_window.show();
 }
 
 void DownloadDialog::update_cache(const bool cache) {
@@ -237,40 +273,4 @@ void DownloadDialog::update_cache(const bool cache) {
             this->set_widgets_enabled(true);
         }
     }
-}
-
-bool DownloadDialog::check_table_structure(const QString &file_path) const {
-    QFile table_file(file_path);
-    table_file.open(QFile::ReadOnly);
-    return QString(table_file.readLine()).split(',').contains(this->config["download_dialog_rating_col_name"].toString());
-}
-
-void DownloadDialog::show_fresco_window(const QString &data_file_name) {
-    this->close();
-    static FrescoWindow fresco_window(data_file_name, this->config["download_dialog_rating_col_name"].toString(), this->current_theme);
-    fresco_window.show();
-}
-
-void DownloadDialog::run_loading_gif() {
-    this->loading_gif.stop();
-    this->ui.status_label->setMovie(&this->loading_gif);
-    this->loading_gif.start();
-}
-
-void DownloadDialog::set_widgets_enabled(const bool status) {
-    this->ui.url_line_edit->setEnabled(status);
-    this->ui.load_from_url_button->setEnabled(status);
-    this->ui.load_from_file_button->setEnabled(status);
-    this->ui.load_from_folder_button->setEnabled(status);
-    this->ui.switch_theme_button->setEnabled(status);
-}
-
-void DownloadDialog::set_theme(const Theme theme) {
-    this->current_theme = theme;
-
-    this->loading_gif.setFileName(QString(":load_gif_%1").arg(this->current_theme));
-
-    QFile qss_file(QString(":theme_%1").arg(this->current_theme));
-    qss_file.open(QFile::ReadOnly);
-    this->setStyleSheet(QLatin1String(qss_file.readAll()));
 }

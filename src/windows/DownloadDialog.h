@@ -1,3 +1,5 @@
+#pragma once
+
 #include <QDialog>
 #include <QJsonObject>
 #include <QMovie>
@@ -24,37 +26,37 @@ class DownloadDialog : public QDialog {
 
         Ui::DownloadDialogUi ui;
 
-        void init_cached_tables_dir() const;
-
-        QStringList get_tables_list() const;
-
-        void fill_combo_box();
-
-        void load_table_from_file();
-
-        void load_table_from_cache();
-
-        void load_table_by_url(const bool cache = false);
-
-        QString get_table_id_from_url(const QString &url) const;
-
-        QString get_sheet_id_from_url(const QString &url) const;
-
-        QString get_url_from_file(const QString &filename) const;
+        bool check_table_structure(const QString &file_path) const;
 
         bool is_correct_url() const;
 
         bool is_url() const;
 
-        void update_cache(const bool cache);
+        QString get_sheet_id_from_url(const QString &url) const;
 
-        bool check_table_structure(const QString &file_path) const;
+        QString get_table_id_from_url(const QString &url) const;
 
-        void show_fresco_window(const QString &data_file_name);
+        QString get_url_from_file(const QString &filename) const;
+
+        QStringList get_tables_list() const;
+
+        void fill_combo_box();
+
+        void init_cached_tables_dir() const;
+
+        void load_table_by_url(const bool cache = false);
+
+        void load_table_from_cache();
+
+        void load_table_from_file();
 
         void run_loading_gif();
 
+        void set_theme(const Theme theme);
+
         void set_widgets_enabled(const bool status);
 
-        void set_theme(const Theme theme);
+        void show_fresco_window(const QString &data_file_name);
+
+        void update_cache(const bool cache);
 };

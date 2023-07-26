@@ -11,6 +11,7 @@
 #include <QJSValue>
 #include <QJSValueList>
 #include <QKeySequence>
+#include <QList>
 #include <QSoundEffect>
 #include <QRect>
 #include <QRegion>
@@ -61,6 +62,28 @@ RouletteDialog::RouletteDialog(const int spin_sound_duration, const int total, c
     std::sample(numbers.begin(), numbers.end(), std::back_inserter(this->win_buttons), win, std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count()));
 }
 
+void RouletteDialog::closeEvent(QCloseEvent* event) {
+    QDialog::closeEvent(event);
+
+    this->stop_sounds();
+    this->timer.stop();
+}
+
+void RouletteDialog::mousePressEvent(QMouseEvent* event) {
+    QDialog::mousePressEvent(event);
+
+    if (pow(this->size().width() / 2 - event->pos().x(), 2) + pow(this->size().height() / 2 - event->pos().y(), 2) <= pow(this->close_button->size().width() / 2, 2)) {
+        this->close();
+    }
+}
+
+void RouletteDialog::showEvent(QShowEvent* event) {
+    QDialog::showEvent(event);
+
+    this->spin_sound->play();
+    this->timer.start(this->config["roulette_spin_step"].toInt());
+}
+
 void RouletteDialog::init_sounds(const int spin_sound_duration) {
     this->spin_sound = new QSoundEffect(this);
     this->shot_sound = new QSoundEffect(this);
@@ -72,12 +95,6 @@ void RouletteDialog::init_sounds(const int spin_sound_duration) {
 
     this->total_spin_duration = spin_sound_duration;
     this->current_spin_duration = spin_sound_duration;
-}
-
-void RouletteDialog::stop_sounds() {
-    this->spin_sound->stop();
-    this->shot_sound->stop();
-    this->empty_sound->stop();
 }
 
 void RouletteDialog::place_buttons(const int r, const int total, const int button_size, const int window_size) {
@@ -103,6 +120,12 @@ void RouletteDialog::place_buttons(const int r, const int total, const int butto
     this->close_button->setText(this->config["roulette_close_button_init_text"].toString());
 }
 
+void RouletteDialog::set_buttons_enabled(const bool status) {
+    for (QRoundPushButton* button : buttons) {
+        button->setEnabled(status);
+    }
+}
+
 void RouletteDialog::set_buttons_labels() {
     QString letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     std::shuffle(letters.begin(), letters.end(), std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count()));
@@ -111,28 +134,6 @@ void RouletteDialog::set_buttons_labels() {
         this->buttons[i]->setText(letters[i]);
         this->buttons[i]->setShortcut(QKeySequence(letters[i]));
         this->buttons[i]->setFont(QFont("Comic Sans MS", this->config["roulette_buttons_font_size"].toInt()));
-    }
-}
-
-void RouletteDialog::spin_buttons(const int r, const int total, const int button_size, const int window_size) {
-    if (this->current_spin_duration <= 0) {
-        this->timer.stop();
-        this->set_buttons_enabled(true);
-        return;
-    }
-
-    QJSEngine engine;
-    QJSValue fn = engine.evaluate(QString("(function(i, t) { return %1; })").arg(this->config["roulette_spin_function"].toString()));
-
-    this->current_spin_duration -= this->timer.interval();
-
-    const double angle = 2 * M_PI / total;
-    for (int i = 0; i < this->buttons.size(); i++) {
-        QJSValueList args;
-        args << i << this->total_spin_duration - this->current_spin_duration;
-        const double x = r * std::cos(angle * i + fn.call(args).toString().toDouble()) + (window_size - button_size) / 2;
-        const double y = r * std::sin(angle * i + fn.call(args).toString().toDouble()) + (window_size - button_size) / 2;
-        this->buttons[i]->move(x, y);
     }
 }
 
@@ -154,7 +155,7 @@ void RouletteDialog::shoot(const int button_number) {
         const int hole_size = this->config["roulette_shot_hole_label_size"].toInt();
         QHoleLabel* shot_hole = new QHoleLabel(hole_size, this);
 
-        const QPoint hole_pos = this->buttons[button_number]->last_click_pos + QPoint(this->buttons[button_number]->x(), this->buttons[button_number]->y());
+        const QPoint hole_pos = this->buttons[button_number]->get_last_click_pos() + QPoint(this->buttons[button_number]->x(), this->buttons[button_number]->y());
         shot_hole->move(hole_pos.x() - hole_size / 2, hole_pos.y() - hole_size / 2);
         shot_hole->show();
 
@@ -195,30 +196,30 @@ void RouletteDialog::shoot(const int button_number) {
     }
 }
 
-void RouletteDialog::set_buttons_enabled(const bool status) {
-    for (QRoundPushButton* button : buttons) {
-        button->setEnabled(status);
+void RouletteDialog::spin_buttons(const int r, const int total, const int button_size, const int window_size) {
+    if (this->current_spin_duration <= 0) {
+        this->timer.stop();
+        this->set_buttons_enabled(true);
+        return;
+    }
+
+    QJSEngine engine;
+    QJSValue fn = engine.evaluate(QString("(function(i, t) { return %1; })").arg(this->config["roulette_spin_function"].toString()));
+
+    this->current_spin_duration -= this->timer.interval();
+
+    const double angle = 2 * M_PI / total;
+    for (int i = 0; i < this->buttons.size(); i++) {
+        QJSValueList args;
+        args << i << this->total_spin_duration - this->current_spin_duration;
+        const double x = r * std::cos(angle * i + fn.call(args).toString().toDouble()) + (window_size - button_size) / 2;
+        const double y = r * std::sin(angle * i + fn.call(args).toString().toDouble()) + (window_size - button_size) / 2;
+        this->buttons[i]->move(x, y);
     }
 }
 
-void RouletteDialog::showEvent(QShowEvent* event) {
-    QDialog::showEvent(event);
-
-    this->spin_sound->play();
-    this->timer.start(this->config["roulette_spin_step"].toInt());
-}
-
-void RouletteDialog::closeEvent(QCloseEvent* event) {
-    QDialog::closeEvent(event);
-
-    this->stop_sounds();
-    this->timer.stop();
-}
-
-void RouletteDialog::mousePressEvent(QMouseEvent* event) {
-    QDialog::mousePressEvent(event);
-
-    if (pow(this->size().width() / 2 - event->pos().x(), 2) + pow(this->size().height() / 2 - event->pos().y(), 2) <= pow(this->close_button->size().width() / 2, 2)) {
-        this->close();
-    }
+void RouletteDialog::stop_sounds() {
+    this->spin_sound->stop();
+    this->shot_sound->stop();
+    this->empty_sound->stop();
 }

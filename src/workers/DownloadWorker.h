@@ -15,13 +15,14 @@ class DownloadWorker : public QObject {
         void finished();
     public:
         QString get_file_path() const;
+
         void download(const QUrl &load_table_url, const QString &save_path);
     private:
-        QString file_path;
-
         QNetworkAccessManager manager;
 
         QScopedPointer<QNetworkReply, QScopedPointerDeleteLater> reply;
+
+        QString file_path;
 
         void download_finished(const QString &save_path);
 };

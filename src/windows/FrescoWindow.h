@@ -1,3 +1,5 @@
+#pragma once
+
 #include <QHash>
 #include <QJsonObject>
 #include <QMainWindow>
@@ -34,49 +36,49 @@ class FrescoWindow : public QMainWindow {
 
         Ui::FrescoWindowUi ui;
 
+        bool is_name(const QString &name) const;
+
+        QString last_letter(const int time) const;
+
+        unsigned int calculate_time(const int rating) const;
+
+        void add_student_to_combo_box(const QString &name, const int rating);
+
+        void cells_count_spin_box_changed();
+
+        void clear();
+
+        void create_connections();
+
+        void generate_riddle();
+
+        void import_questions_from_TeX();
+
+        void init_remaining_time_label();
+
         void init_sound();
 
         void init_ui();
 
-        void create_connections();
-
         void parse_csv(const QString &file_name, const QString &rating_col_name);
-
-        void add_student_to_combo_box(const QString &name, const int rating);
 
         void set_time_label();
 
         void set_question_label();
 
-        void init_remaining_time_label();
-
-        void generate_riddle();
-
         void select_questons_file();
-
-        void import_questions_from_TeX();
 
         void set_evil_style();
 
         void set_good_style();
 
+        void set_theme(const Theme theme);
+
+        void show_roulette_dialog();
+
         void start_timer();
 
         void update_remaining_time_label();
 
-        void cells_count_spin_box_changed();
-
         void win_cells_count_spin_box_changed();
-
-        void show_roulette_dialog();
-
-        void clear();
-
-        void set_theme(const Theme theme);
-
-        bool is_name(const QString &name) const;
-
-        unsigned int calculate_time(const int rating) const;
-
-        QString last_letter(const int time) const;
 };

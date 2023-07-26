@@ -1,6 +1,7 @@
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QString>
 #include <QStringList>
 
 #include "load_config.h"
