@@ -7,6 +7,7 @@
 #include <QGraphicsOpacityEffect>
 #include <QJsonValue>
 #include <QPoint>
+#include <QPointer>
 #include <QPushButton>
 #include <QRadialGradient>
 #include <QRegularExpression>
@@ -229,7 +230,7 @@ void DownloadDialog::set_widgets_enabled(const bool status) {
 
 void DownloadDialog::show_fresco_window(const QString &data_file_name) {
     this->close();
-    FrescoWindow* fresco_window = new FrescoWindow(data_file_name, this->config["download_dialog_rating_col_name"].toString(), this->current_theme);
+    QPointer<FrescoWindow> fresco_window = new FrescoWindow(data_file_name, this->config["download_dialog_rating_col_name"].toString(), this->current_theme);
     fresco_window->show();
 }
 

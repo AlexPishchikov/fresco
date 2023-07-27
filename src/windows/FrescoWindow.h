@@ -3,6 +3,7 @@
 #include <QHash>
 #include <QJsonObject>
 #include <QMainWindow>
+#include <QPointer>
 #include <QString>
 #include <QStringList>
 #include <QTimer>
@@ -30,13 +31,11 @@ class FrescoWindow : public QMainWindow {
 
         QTimer timer;
 
-        RouletteDialog* roulette = nullptr;
+        QPointer<RouletteDialog> roulette;
 
         Theme current_theme;
 
         Ui::FrescoWindowUi ui;
-
-        void closeEvent(QCloseEvent* event);
 
         bool is_name(const QString &name) const;
 

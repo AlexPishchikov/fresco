@@ -6,6 +6,7 @@
 #include <QSoundEffect>
 #include <QMouseEvent>
 #include <QList>
+#include <QPointer>
 #include <QShowEvent>
 #include <QString>
 #include <QTimer>
@@ -28,15 +29,15 @@ class RouletteDialog : public QDialog {
 
         QList<int> win_buttons;
 
-        QList<QRoundPushButton*> buttons;
+        QList<QPointer<QRoundPushButton>> buttons;
 
-        QSoundEffect* spin_sound;
+        QPointer<QSoundEffect> spin_sound;
 
-        QSoundEffect* shot_sound;
+        QPointer<QSoundEffect> shot_sound;
 
-        QSoundEffect* empty_sound;
+        QPointer<QSoundEffect> empty_sound;
 
-        QRoundPushButton* close_button;
+        QPointer<QRoundPushButton> close_button;
 
         QTimer timer;
 

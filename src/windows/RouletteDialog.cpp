@@ -12,6 +12,7 @@
 #include <QJSValueList>
 #include <QKeySequence>
 #include <QList>
+#include <QPointer>
 #include <QSoundEffect>
 #include <QRect>
 #include <QRegion>
@@ -44,7 +45,7 @@ RouletteDialog::RouletteDialog(const int spin_sound_duration, const int total, c
 
     this->setFixedSize(window_size, window_size);
 
-    this->setStyleSheet(QString("border-radius: %1px; border: 2px solid black;").arg(window_size / 2));
+    this->setStyleSheet(QString("border-radius: %1px; border: 3px solid black;").arg(window_size / 2));
     this->setMask(QRegion(this->rect(), QRegion::Ellipse));
 
     this->place_buttons(r, total, button_size, window_size);
@@ -103,7 +104,7 @@ void RouletteDialog::place_buttons(const int r, const int total, const int butto
         const double x = r * std::cos(angle * i) + (window_size - button_size) / 2;
         const double y = r * std::sin(angle * i) + (window_size - button_size) / 2;
 
-        QRoundPushButton* button = new QRoundPushButton(button_size, this);
+        QPointer<QRoundPushButton> button = new QRoundPushButton(button_size, this);
         connect(button, &QRoundPushButton::clicked, this, [=]{this->shoot(i);});
         button->move(x, y);
 
@@ -121,7 +122,7 @@ void RouletteDialog::place_buttons(const int r, const int total, const int butto
 }
 
 void RouletteDialog::set_buttons_enabled(const bool status) {
-    for (QRoundPushButton* button : buttons) {
+    for (QPointer<QRoundPushButton> button : buttons) {
         button->setEnabled(status);
     }
 }
@@ -153,7 +154,7 @@ void RouletteDialog::shoot(const int button_number) {
         this->attempts = 0;
 
         const int hole_size = this->config["roulette_shot_hole_label_size"].toInt();
-        QHoleLabel* shot_hole = new QHoleLabel(hole_size, this);
+        QPointer<QHoleLabel> shot_hole = new QHoleLabel(hole_size, this);
 
         const QPoint hole_pos = this->buttons[button_number]->get_last_click_pos() + QPoint(this->buttons[button_number]->x(), this->buttons[button_number]->y());
         shot_hole->move(hole_pos.x() - hole_size / 2, hole_pos.y() - hole_size / 2);
