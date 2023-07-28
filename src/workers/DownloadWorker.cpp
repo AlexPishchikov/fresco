@@ -24,6 +24,11 @@ void DownloadWorker::download(const QUrl &load_table_url, const QString &save_pa
 }
 
 void DownloadWorker::download_finished(const QString &save_path) {
+    if (this->reply->error() != QNetworkReply::NoError) {
+        emit finished();
+        return;
+    }
+
     QMimeData headers;
     headers.setData("text/uri-list", this->reply->header(QNetworkRequest::ContentDispositionHeader).toByteArray());
 
