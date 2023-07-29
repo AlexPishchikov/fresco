@@ -68,7 +68,7 @@ unsigned int FrescoWindow::calculate_time(const int rating) const {
 }
 
 void FrescoWindow::add_student_to_combo_box(const QString &name, const int rating) {
-    this->ui.name_combo_box->addItem(name);
+    this->ui.names_combo_box->addItem(name);
     this->time_by_name[name] = this->calculate_time(rating);
 }
 
@@ -88,7 +88,7 @@ void FrescoWindow::clear() {
     this->ui.remaining_time_label->hide();
     this->ui.total_time_label->hide();
 
-    this->ui.name_combo_box->setCurrentIndex(0);
+    this->ui.names_combo_box->setCurrentIndex(0);
 
     this->timer.stop();
 }
@@ -109,14 +109,14 @@ void FrescoWindow::create_connections() {
 }
 
 void FrescoWindow::generate_riddle() {
-    const QString current_name = this->ui.name_combo_box->currentText();
+    const QString current_name = this->ui.names_combo_box->currentText();
     if (current_name == this->config["fresco_name_combo_box_placeholder"].toString()) {
         return;
     }
 
-    if (this->ui.name_combo_box->findText(current_name, Qt::MatchExactly) == -1) {
+    if (this->ui.names_combo_box->findText(current_name, Qt::MatchExactly) == -1) {
         this->add_student_to_combo_box(current_name, this->config["fresco_custom_student_rating"].toInt());
-        this->ui.name_combo_box->setCurrentIndex(this->ui.name_combo_box->count() - 1);
+        this->ui.names_combo_box->setCurrentIndex(this->ui.names_combo_box->count() - 1);
     }
 
     this->timer.stop();
@@ -137,10 +137,10 @@ void FrescoWindow::generate_riddle() {
 
     this->setWindowTitle(QString("%1 ~ %2").arg(this->config["fresco_window_title"].toString()).arg(current_name));
 
-    QPixmap icon(this->ui.name_combo_box->size().height(), this->ui.name_combo_box->size().height());
+    QPixmap icon(this->ui.names_combo_box->size().height(), this->ui.names_combo_box->size().height());
     icon.fill(QColor(this->config["fresco_name_icon_color"].toString()));
 
-    this->ui.name_combo_box->setItemData(this->ui.name_combo_box->currentIndex(), icon, Qt::DecorationRole);
+    this->ui.names_combo_box->setItemData(this->ui.names_combo_box->currentIndex(), icon, Qt::DecorationRole);
 }
 
 void FrescoWindow::import_questions_from_TeX() {
@@ -167,7 +167,7 @@ void FrescoWindow::init_remaining_time_label() {
     const int precision = 3 - QString::number(this->config["fresco_time_interval"].toInt()).size() +
                             + QString::number(this->config["fresco_time_interval"].toInt()).remove(QRegularExpression("0+$")).size();
 
-    const QString label_text = QString("%1%2%3").arg(this->time_by_name[this->ui.name_combo_box->currentText()])
+    const QString label_text = QString("%1%2%3").arg(this->time_by_name[this->ui.names_combo_box->currentText()])
                                                 .arg(precision > 0 ? "." : "")
                                                 .arg(QString("0").repeated(precision));
 
@@ -216,8 +216,8 @@ void FrescoWindow::init_ui() {
     this->ui.const_upper_label->hide();
     this->ui.const_lower_label->hide();
 
-    this->ui.name_combo_box->clear();
-    this->ui.name_combo_box->addItem(this->config["fresco_name_combo_box_placeholder"].toString());
+    this->ui.names_combo_box->clear();
+    this->ui.names_combo_box->addItem(this->config["fresco_name_combo_box_placeholder"].toString());
 }
 
 void FrescoWindow::parse_csv(const QString &data_file_path, const QString &rating_col_name) {
@@ -235,8 +235,8 @@ void FrescoWindow::parse_csv(const QString &data_file_path, const QString &ratin
 }
 
 void FrescoWindow::set_time_label() {
-    this->ui.total_time_label->setText(QString("%1 секунд%2").arg(this->time_by_name[this->ui.name_combo_box->currentText()])
-                                                             .arg(this->last_letter(this->time_by_name[this->ui.name_combo_box->currentText()])));
+    this->ui.total_time_label->setText(QString("%1 секунд%2").arg(this->time_by_name[this->ui.names_combo_box->currentText()])
+                                                             .arg(this->last_letter(this->time_by_name[this->ui.names_combo_box->currentText()])));
 }
 
 void FrescoWindow::set_question_label() {
@@ -297,10 +297,10 @@ void FrescoWindow::show_roulette_dialog() {
 
 void FrescoWindow::start_timer() {
     this->timer.stop();
-    if (this->ui.name_combo_box->currentText() == this->config["fresco_name_combo_box_placeholder"].toString() || this->ui.question_label->text() == "") {
+    if (this->ui.names_combo_box->currentText() == this->config["fresco_name_combo_box_placeholder"].toString() || this->ui.question_label->text() == "") {
         return;
     }
-    if (this->time_by_name[this->ui.name_combo_box->currentText()] == 0) {
+    if (this->time_by_name[this->ui.names_combo_box->currentText()] == 0) {
         this->set_evil_style();
         return;
     }

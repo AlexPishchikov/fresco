@@ -15,6 +15,8 @@ QString DownloadWorker::get_file_path() const {
 void DownloadWorker::download(const QUrl &load_table_url, const QString &save_path) {
     this->file_path = "";
 
+    this->manager.setTransferTimeout(10000);
+
     QNetworkRequest request = QNetworkRequest(load_table_url);
     request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, true);
     this->reply.reset(this->manager.get(request));
