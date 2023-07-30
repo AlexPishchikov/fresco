@@ -31,7 +31,7 @@ DownloadDialog::DownloadDialog(QWidget *parent) : QDialog(parent) {
 
     this->init_cached_tables_dir();
 
-    ui.setupUi(this);
+    this->ui.setupUi(this);
 
     this->setFixedSize(this->size());
 

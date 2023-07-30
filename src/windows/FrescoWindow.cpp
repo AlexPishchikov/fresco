@@ -184,7 +184,7 @@ void FrescoWindow::init_sound() {
 }
 
 void FrescoWindow::init_ui() {
-    ui.setupUi(this);
+    this->ui.setupUi(this);
 
     this->setFixedSize(this->size());
 
