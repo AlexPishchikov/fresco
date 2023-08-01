@@ -4,6 +4,7 @@
 
 #include <QAudioOutput>
 #include <QColor>
+#include <QComboBox>
 #include <QFont>
 #include <QFontDatabase>
 #include <QFile>
@@ -82,6 +83,9 @@ void FrescoWindow::clear() {
 
     this->setWindowTitle(this->config["fresco_window_title"].toString());
 
+    this->ui.start_timer_button->setEnabled(false);
+    this->ui.stop_timer_button->setEnabled(false);
+
     this->ui.const_upper_label->hide();
     this->ui.const_lower_label->hide();
     this->ui.question_label->hide();
@@ -102,6 +106,9 @@ void FrescoWindow::create_connections() {
     connect(this->ui.select_questions_file_button, &QPushButton::clicked, this, [=]{this->select_questons_file();});
     connect(this->ui.start_timer_button, &QPushButton::clicked, this, [=]{this->start_timer();});
     connect(this->ui.stop_timer_button, &QPushButton::clicked, this, [=]{this->timer.stop();});
+
+    connect(this->ui.names_combo_box, &QComboBox::currentTextChanged, this, [=]{this->update_generate_button_status();});
+
     connect(this->ui.cells_count_spin_box, QOverload<int>::of(&QSpinBox::valueChanged), this, [=]{this->cells_count_spin_box_changed();});
     connect(this->ui.win_cells_count_spin_box, QOverload<int>::of(&QSpinBox::valueChanged), this, [=]{this->win_cells_count_spin_box_changed();});
 
@@ -118,6 +125,9 @@ void FrescoWindow::generate_riddle() {
         this->add_student_to_combo_box(current_name, this->config["fresco_custom_student_rating"].toInt());
         this->ui.names_combo_box->setCurrentIndex(this->ui.names_combo_box->count() - 1);
     }
+
+    this->ui.start_timer_button->setEnabled(true);
+    this->ui.stop_timer_button->setEnabled(true);
 
     this->timer.stop();
 
@@ -161,6 +171,7 @@ void FrescoWindow::import_questions_from_TeX() {
                  std::default_random_engine(std::chrono::system_clock::now().time_since_epoch().count()));
 
     this->ui.questions_count_label->setText(QString("Осталось вопросов: %1").arg(this->questions_list.size()));
+    this->ui.refresh_questions_button->setEnabled(true);
 }
 
 void FrescoWindow::init_remaining_time_label() {
@@ -218,6 +229,11 @@ void FrescoWindow::init_ui() {
 
     this->ui.names_combo_box->clear();
     this->ui.names_combo_box->addItem(this->config["fresco_name_combo_box_placeholder"].toString());
+
+    this->ui.generate_riddle_button->setEnabled(false);
+    this->ui.refresh_questions_button->setEnabled(false);
+    this->ui.start_timer_button->setEnabled(false);
+    this->ui.stop_timer_button->setEnabled(false);
 }
 
 void FrescoWindow::parse_csv(const QString &data_file_path, const QString &rating_col_name) {
@@ -309,6 +325,15 @@ void FrescoWindow::start_timer() {
     this->init_remaining_time_label();
 
     this->timer.start();
+}
+
+void FrescoWindow::update_generate_button_status() {
+    if (this->ui.names_combo_box->currentText() == this->config["fresco_name_combo_box_placeholder"].toString()) {
+        this->ui.generate_riddle_button->setEnabled(false);
+    }
+    else {
+        this->ui.generate_riddle_button->setEnabled(true);
+    }
 }
 
 void FrescoWindow::update_remaining_time_label() {
