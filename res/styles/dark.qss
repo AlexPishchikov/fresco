@@ -46,7 +46,7 @@ QComboBox:hover, QPushButton:hover, QSpinBox::down-button:hover {
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #777777, stop: 1 #5E5E5E);
 }
 
-QPushButton:hover#start_timer_button, QSpinBox::up-button:hover {
+QPushButton:disabled#start_timer_button, QPushButton:hover#start_timer_button, QSpinBox::up-button:hover {
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #5E5E5E, stop: 1 #777777);
 }
 
@@ -54,6 +54,10 @@ QLineEdit:disabled, QPushButton:disabled, QSpinBox::down-button:off, QSpinBox::u
     color: #999999;
     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #777777, stop: 1 #7E7E7E);
     border: 1px solid qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #888888, stop: 1 #7E7E7E);
+}
+
+QPushButton:disabled#stop_timer_button {
+    background-color: qlineargradient(x1: 0, y1: 1, x2: 0, y2: 0, stop: 0 #5E5E5E, stop: 1 #777777);
 }
 
 QPushButton:pressed, QSpinBox::down-button:pressed, QSpinBox::up-button:pressed {
