@@ -24,7 +24,7 @@
 
 
 DownloadDialog::DownloadDialog(QWidget *parent) : QDialog(parent) {
-    this->config = load_config("res/default_config/DownloadDialogConfig.json");
+    this->config = load_config(":download_dialog_config_default");
     if (this->config["download_dialog_folder_name"].toString().at(-1) != '/') {
         this->config["download_dialog_folder_name"] = QJsonValue(QString("%1/").arg(this->config["download_dialog_folder_name"].toString()));
     }

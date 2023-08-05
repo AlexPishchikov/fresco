@@ -29,7 +29,7 @@
 
 
 FrescoWindow::FrescoWindow(const QString &data_file_path, const QString &rating_col_name, const Theme current_theme, QWidget *parent) : QMainWindow(parent) {
-    this->config = load_config("res/default_config/FrescoWindowConfig.json");
+    this->config = load_config(":fresco_window_config_default");
     this->timer.setInterval(this->config["fresco_time_interval"].toInt());
 
     this->evil_style = false;

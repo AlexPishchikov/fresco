@@ -1,6 +1,10 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
     <qresource>
+        <file alias="download_dialog_config_default">res/default_config/DownloadDialogConfig.json</file>
+        <file alias="fresco_window_config_default">res/default_config/FrescoWindowConfig.json</file>
+        <file alias="roulette_dialog_config_default">res/default_config/RouletteDialogConfig.json</file>
+
         <file alias="lobster_font">res/fonts/Lobster-Regular.ttf</file>
 
         <file alias="load_gif_0">res/gifs/load_dark.gif</file>

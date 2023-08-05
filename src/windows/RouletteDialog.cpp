@@ -31,7 +31,7 @@
 RouletteDialog::RouletteDialog(const int spin_sound_duration, const int total, const int win, const int attempts, QWidget *parent) : QDialog(parent) {
     this->attempts = attempts;
 
-    this->config = load_config("res/default_config/RouletteDialogConfig.json");
+    this->config = load_config(":roulette_dialog_config_default");
 
     this->setWindowFlag(Qt::FramelessWindowHint);
 
