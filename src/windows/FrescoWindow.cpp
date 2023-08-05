@@ -107,7 +107,7 @@ void FrescoWindow::create_connections() {
     connect(this->ui.start_timer_button, &QPushButton::clicked, this, [=]{this->start_timer();});
     connect(this->ui.stop_timer_button, &QPushButton::clicked, this, [=]{this->timer.stop();});
 
-    connect(this->ui.names_combo_box, &QComboBox::currentTextChanged, this, [=]{this->update_generate_button_status();});
+    connect(this->ui.names_combo_box, &QComboBox::currentTextChanged, this, [=]{this->update_buttons_status();});
 
     connect(this->ui.cells_count_spin_box, QOverload<int>::of(&QSpinBox::valueChanged), this, [=]{this->cells_count_spin_box_changed();});
     connect(this->ui.win_cells_count_spin_box, QOverload<int>::of(&QSpinBox::valueChanged), this, [=]{this->win_cells_count_spin_box_changed();});
@@ -327,7 +327,10 @@ void FrescoWindow::start_timer() {
     this->timer.start();
 }
 
-void FrescoWindow::update_generate_button_status() {
+void FrescoWindow::update_buttons_status() {
+    this->ui.start_timer_button->setEnabled(false);
+    this->ui.stop_timer_button->setEnabled(false);
+
     if (this->ui.names_combo_box->currentText() == this->config["fresco_name_combo_box_placeholder"].toString()) {
         this->ui.generate_riddle_button->setEnabled(false);
     }

@@ -79,7 +79,7 @@ class FrescoWindow : public QMainWindow {
 
         void start_timer();
 
-        void update_generate_button_status();
+        void update_buttons_status();
 
         void update_remaining_time_label();
 
