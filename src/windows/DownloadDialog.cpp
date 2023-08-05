@@ -180,15 +180,11 @@ void DownloadDialog::load_table_from_file() {
     auto file_data = QString(table_file.readAll()).split(',');
     const QRegularExpression regex("\"[^\"]+\"");
 
-    qDebug() << file_data;
-
     for (int i = 0; i < file_data.size(); i++) {
         if (regex.match(file_data[i]).hasMatch()) {
             file_data[i] = file_data[i].replace('\n', ' ');
         }
     }
-
-    qDebug() << file_data;
 
     table_file.close();
     table_file.open(QFile::WriteOnly);

@@ -38,7 +38,7 @@
 
     **Описание:** Начальное значение для `attempts_count_spin_box`(количество попыток при игре в рулетку).
 
-    **Ограничение:** `[0, cells_count_init_value]`
+    **Ограничение:** `[1, win_cells_count_init_value]`
 
 - `fresco_const_upper_label_font_size`
 

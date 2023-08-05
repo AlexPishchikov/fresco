@@ -30,6 +30,7 @@
 
 FrescoWindow::FrescoWindow(const QString &data_file_path, const QString &rating_col_name, const Theme current_theme, QWidget *parent) : QMainWindow(parent) {
     this->config = load_config(":fresco_window_config_default");
+    this->check_config();
     this->timer.setInterval(this->config["fresco_time_interval"].toInt());
 
     this->evil_style = false;
@@ -76,6 +77,16 @@ void FrescoWindow::add_student_to_combo_box(const QString &name, const int ratin
 void FrescoWindow::cells_count_spin_box_changed() {
     this->ui.win_cells_count_spin_box->setMaximum(this->ui.cells_count_spin_box->value());
     this->ui.attempts_count_spin_box->setMaximum(std::min(this->ui.cells_count_spin_box->value(), this->ui.win_cells_count_spin_box->value()));
+}
+
+void FrescoWindow::check_config() {
+    this->config["fresco_cells_count_init_value"] = QJsonValue(std::max(3, std::min(26, this->config["fresco_cells_count_init_value"].toInt())));
+    this->config["fresco_win_cells_count_init_value"] = QJsonValue(std::max(0, std::min(this->config["fresco_cells_count_init_value"].toInt(),
+                                                                                        this->config["fresco_win_cells_count_init_value"].toInt())));
+    this->config["fresco_attempts_count_init_value"] = QJsonValue(std::max(1, std::min(this->config["fresco_win_cells_count_init_value"].toInt(),
+                                                                                       this->config["fresco_attempts_count_init_value"].toInt())));
+
+    this->config["fresco_time_interval"] = QJsonValue(std::max(1, std::min(1000, this->config["fresco_time_interval"].toInt())));
 }
 
 void FrescoWindow::clear() {
@@ -186,8 +197,8 @@ void FrescoWindow::init_remaining_time_label() {
 }
 
 void FrescoWindow::init_sound() {
-    QPointer<QMediaPlayer> spin_player = new QMediaPlayer;
-    QPointer<QAudioOutput> audio_output = new QAudioOutput;
+    QPointer<QMediaPlayer> spin_player = new QMediaPlayer(this);
+    QPointer<QAudioOutput> audio_output = new QAudioOutput(this);
     audio_output->setMuted(true);
     spin_player->setAudioOutput(audio_output);
     spin_player->setSource(QUrl("qrc:spin_sound"));

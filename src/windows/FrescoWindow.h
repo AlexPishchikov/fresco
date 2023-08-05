@@ -47,6 +47,8 @@ class FrescoWindow : public QMainWindow {
 
         void cells_count_spin_box_changed();
 
+        void check_config();
+
         void clear();
 
         void create_connections();
