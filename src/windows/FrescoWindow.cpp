@@ -31,7 +31,6 @@
 FrescoWindow::FrescoWindow(const QString &data_file_path, const QString &rating_col_name, const Theme current_theme, QWidget *parent) : QMainWindow(parent) {
     this->config = load_config(":fresco_window_config_default");
     this->check_config();
-    this->timer.setInterval(this->config["fresco_time_interval"].toInt());
 
     this->evil_style = false;
 
@@ -335,6 +334,8 @@ void FrescoWindow::start_timer() {
     this->set_good_style();
     this->init_remaining_time_label();
 
+    this->timer.setInterval(this->config["fresco_time_interval"].toInt());
+
     this->timer.start();
 }
 
@@ -356,9 +357,15 @@ void FrescoWindow::update_remaining_time_label() {
     if (current_time <= 0) {
         this->timer.stop();
         this->set_evil_style();
+        return;
     }
-    else {
-        this->ui.remaining_time_label->setText(QString::number(current_time));
+
+    this->ui.remaining_time_label->setText(QString::number(current_time));
+
+    if (current_time * 1000 < this->config["fresco_time_interval"].toInt()) {\
+        this->timer.stop();
+        this->timer.setInterval(current_time * 1000);
+        this->timer.start();
     }
 }
 
