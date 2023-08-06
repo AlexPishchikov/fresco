@@ -7,6 +7,7 @@
 #include <QDialog>
 #include <QFont>
 #include <QFontDatabase>
+#include <QJsonValue>
 #include <QJSEngine>
 #include <QJSValue>
 #include <QJSValueList>
@@ -32,6 +33,8 @@ RouletteDialog::RouletteDialog(const int spin_sound_duration, const int total, c
     this->attempts = attempts;
 
     this->config = load_config(":roulette_dialog_config_default");
+
+    this->config["roulette_spin_step"] = QJsonValue(std::max(1, std::min(1000, this->config["roulette_spin_step"].toInt())));
 
     this->setWindowFlag(Qt::FramelessWindowHint);
 

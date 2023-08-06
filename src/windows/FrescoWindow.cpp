@@ -362,7 +362,7 @@ void FrescoWindow::update_remaining_time_label() {
 
     this->ui.remaining_time_label->setText(QString::number(current_time));
 
-    if (current_time * 1000 < this->config["fresco_time_interval"].toInt()) {\
+    if (current_time * 1000 < this->config["fresco_time_interval"].toInt()) {
         this->timer.stop();
         this->timer.setInterval(current_time * 1000);
         this->timer.start();
