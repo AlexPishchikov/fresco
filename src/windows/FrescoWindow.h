@@ -1,7 +1,7 @@
 #pragma once
 
-#include <QHash>
 #include <QJsonObject>
+#include <QList>
 #include <QMainWindow>
 #include <QPointer>
 #include <QString>
@@ -21,9 +21,9 @@ class FrescoWindow : public QMainWindow {
 
         int spin_sound_duration;
 
-        QHash<QString, int> time_by_name;
-
         QJsonObject config;
+
+        QList<int> time;
 
         QString questions_file_path;
 

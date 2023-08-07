@@ -12,7 +12,6 @@
 #include <QJSEngine>
 #include <QJSValue>
 #include <QJSValueList>
-#include <QHash>
 #include <QMainWindow>
 #include <QMediaPlayer>
 #include <QPixmap>
@@ -70,7 +69,7 @@ unsigned int FrescoWindow::calculate_time(const int rating) const {
 
 void FrescoWindow::add_student_to_combo_box(const QString &name, const int rating) {
     this->ui.names_combo_box->addItem(name);
-    this->time_by_name[name] = this->calculate_time(rating);
+    this->time.push_back(this->calculate_time(rating));
 }
 
 void FrescoWindow::cells_count_spin_box_changed() {
@@ -127,13 +126,14 @@ void FrescoWindow::create_connections() {
 
 void FrescoWindow::generate_riddle() {
     const QString current_name = this->ui.names_combo_box->currentText();
-    if (current_name == this->config["fresco_name_combo_box_placeholder"].toString()) {
-        return;
-    }
 
     if (this->ui.names_combo_box->findText(current_name, Qt::MatchExactly) == -1) {
         this->add_student_to_combo_box(current_name, this->config["fresco_custom_student_rating"].toInt());
         this->ui.names_combo_box->setCurrentIndex(this->ui.names_combo_box->count() - 1);
+    }
+
+    if (this->ui.names_combo_box->currentIndex() == 0) {
+        return;
     }
 
     this->ui.start_timer_button->setEnabled(true);
@@ -188,7 +188,7 @@ void FrescoWindow::init_remaining_time_label() {
     const int precision = 3 - QString::number(this->config["fresco_time_interval"].toInt()).size() +
                             + QString::number(this->config["fresco_time_interval"].toInt()).remove(QRegularExpression("0+$")).size();
 
-    const QString label_text = QString("%1%2%3").arg(this->time_by_name[this->ui.names_combo_box->currentText()])
+    const QString label_text = QString("%1%2%3").arg(this->time[this->ui.names_combo_box->currentIndex()])
                                                 .arg(precision > 0 ? "." : "")
                                                 .arg(QString("0").repeated(precision));
 
@@ -250,6 +250,8 @@ void FrescoWindow::parse_csv(const QString &data_file_path, const QString &ratin
     QFile table_file(data_file_path);
     table_file.open(QFile::ReadOnly);
 
+    this->time.push_back(-1);
+
     const int rating_col_index = QString(table_file.readLine()).split(',').indexOf(rating_col_name);
     const QRegularExpression regex(",\s*(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
     while (!table_file.atEnd()) {
@@ -261,8 +263,8 @@ void FrescoWindow::parse_csv(const QString &data_file_path, const QString &ratin
 }
 
 void FrescoWindow::set_time_label() {
-    this->ui.total_time_label->setText(QString("%1 секунд%2").arg(this->time_by_name[this->ui.names_combo_box->currentText()])
-                                                             .arg(this->last_letter(this->time_by_name[this->ui.names_combo_box->currentText()])));
+    this->ui.total_time_label->setText(QString("%1 секунд%2").arg(this->time[this->ui.names_combo_box->currentIndex()])
+                                                             .arg(this->last_letter(this->time[this->ui.names_combo_box->currentIndex()])));
 }
 
 void FrescoWindow::set_question_label() {
@@ -326,7 +328,7 @@ void FrescoWindow::start_timer() {
     if (this->ui.names_combo_box->currentText() == this->config["fresco_name_combo_box_placeholder"].toString() || this->ui.question_label->text() == "") {
         return;
     }
-    if (this->time_by_name[this->ui.names_combo_box->currentText()] == 0) {
+    if (this->time[this->ui.names_combo_box->currentIndex()] == 0) {
         this->set_evil_style();
         return;
     }
