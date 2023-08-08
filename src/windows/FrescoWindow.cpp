@@ -201,7 +201,10 @@ void FrescoWindow::init_sound() {
     audio_output->setMuted(true);
     spin_player->setAudioOutput(audio_output);
     spin_player->setSource(QUrl("qrc:spin_sound"));
-    connect(spin_player, &QMediaPlayer::durationChanged, this, [=]{this->spin_sound_duration = spin_player->duration();});
+    connect(spin_player, &QMediaPlayer::durationChanged, this, [=]{
+        this->spin_sound_duration = spin_player->duration();
+        this->ui.roulette_button->setEnabled(true);
+    });
 }
 
 void FrescoWindow::init_ui() {
@@ -242,6 +245,7 @@ void FrescoWindow::init_ui() {
 
     this->ui.generate_riddle_button->setEnabled(false);
     this->ui.refresh_questions_button->setEnabled(false);
+    this->ui.roulette_button->setEnabled(false);
     this->ui.start_timer_button->setEnabled(false);
     this->ui.stop_timer_button->setEnabled(false);
 }
