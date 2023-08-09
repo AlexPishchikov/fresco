@@ -8,6 +8,9 @@ RCC_DIR = build
 UI_DIR = build/ui
 
 
+#CONFIG += sanitizer sanitize_address
+
+
 FORMS += res/ui/download_dialog.ui \
          res/ui/fresco.ui
 
