@@ -1,4 +1,5 @@
 {
     "download_dialog_folder_name" : ".cached",
-    "download_dialog_rating_col_name" : "Промежуточный рейтинг"
+    "download_dialog_rating_col_name" : "Промежуточный рейтинг",
+    "download_dialog_window_title" : "Загрузка данных"
 }

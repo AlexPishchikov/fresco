@@ -35,6 +35,8 @@ DownloadDialog::DownloadDialog(QWidget *parent) : QDialog(parent) {
 
     this->setFixedSize(this->size());
 
+    this->setWindowTitle(this->config["download_dialog_window_title"].toString());
+
     connect(this->ui.load_from_url_button, &QPushButton::clicked, this, [=]{this->load_table_by_url();});
     connect(this->ui.load_from_file_button, &QPushButton::clicked, this, [=]{this->load_table_from_file();});
     connect(this->ui.load_from_folder_button, &QPushButton::clicked, this, [=]{this->load_table_from_cache();});
@@ -162,6 +164,9 @@ void DownloadDialog::load_table_from_cache() {
         return;
     }
 
+    this->setWindowTitle(QString("%1 ~ %2").arg(this->config["download_dialog_window_title"].toString())
+                                           .arg(this->ui.tables_combo_box->currentText()));
+
     this->ui.url_line_edit->setText(this->get_url_from_file(this->ui.tables_combo_box->currentText()));
     this->load_table_by_url(true);
 }
@@ -231,6 +236,8 @@ void DownloadDialog::show_fresco_window(const QString &data_file_name) {
 }
 
 void DownloadDialog::update_cache(const bool cache) {
+    this->setWindowTitle(this->config["download_dialog_window_title"].toString());
+
     if (this->worker.get_file_path() == "") {
         if (cache) {
             QFile tables_list_file(QString("%1.tables_list").arg(this->config["download_dialog_folder_name"].toString()));
