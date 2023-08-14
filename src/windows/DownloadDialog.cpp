@@ -41,7 +41,7 @@ DownloadDialog::DownloadDialog(QWidget *parent) : QDialog(parent) {
     connect(this->ui.load_from_file_button, &QPushButton::clicked, this, [=]{this->load_table_from_file();});
     connect(this->ui.load_from_folder_button, &QPushButton::clicked, this, [=]{this->load_table_from_cache();});
 
-    this->set_theme(Theme::dark);
+    this->set_theme(static_cast<Theme>(this->config["download_dialog_start_theme"].toInt() % Theme::count));
     connect(this->ui.switch_theme_button, &QPushButton::clicked, this, [=]{this->set_theme(static_cast<Theme>((this->current_theme + 1) % Theme::count));});
 
     QRadialGradient gradient = QRadialGradient(QPoint(339, 20), 320, QPoint(319, 20), 20);
