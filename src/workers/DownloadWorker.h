@@ -14,6 +14,8 @@ class DownloadWorker : public QObject {
     signals:
         void finished();
     public:
+        int get_status_code() const;
+
         QString get_file_path() const;
 
         void download(const QUrl &load_table_url, const QString &save_path);

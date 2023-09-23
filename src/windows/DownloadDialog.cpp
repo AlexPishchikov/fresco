@@ -238,7 +238,7 @@ void DownloadDialog::show_fresco_window(const QString &data_file_name) {
 void DownloadDialog::update_cache(const bool cache) {
     this->setWindowTitle(this->config["download_dialog_window_title"].toString());
 
-    if (this->worker.get_file_path() == "") {
+    if (this->worker.get_status_code() != 200) {
         if (cache) {
             QFile tables_list_file(QString("%1.tables_list").arg(this->config["download_dialog_folder_name"].toString()));
             tables_list_file.open(QFile::ReadOnly);
