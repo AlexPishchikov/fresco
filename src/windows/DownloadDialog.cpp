@@ -86,7 +86,7 @@ QString DownloadDialog::get_table_id_from_url(const QString &url) const {
 }
 
 QString DownloadDialog::get_url_from_file(const QString &filename) const {
-    const int line_index = get_tables_list().indexOf(filename);
+    const int line_index = this->get_tables_list().indexOf(filename);
 
     QFile tables_list_file(QString("%1.tables_list").arg(this->config["download_dialog_folder_name"].toString()));
     tables_list_file.open(QFile::ReadOnly);
@@ -263,7 +263,7 @@ void DownloadDialog::update_cache(const bool cache) {
                 this->show_fresco_window(this->worker.get_file_path());
             }
             else {
-                if (!get_tables_list().contains(this->worker.get_file_path().split('/').last())) {
+                if (!this->get_tables_list().contains(this->worker.get_file_path().split('/').last())) {
                     QFile tables_list_file(QString("%1.tables_list").arg(this->config["download_dialog_folder_name"].toString()));
                     tables_list_file.open(QFile::Append);
                     tables_list_file.write(QString("%1 %2\n").arg(this->worker.get_file_path().split('/').last()).arg(this->ui.url_line_edit->text().simplified()).toUtf8());
