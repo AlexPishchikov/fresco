@@ -258,7 +258,7 @@ void DownloadDialog::update_cache(const bool cache) {
         }
     }
     else {
-        if (check_table_structure(this->worker.get_file_path())) {
+        if (this->check_table_structure(this->worker.get_file_path())) {
             if (cache) {
                 this->show_fresco_window(this->worker.get_file_path());
             }

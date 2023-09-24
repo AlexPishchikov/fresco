@@ -23,6 +23,7 @@
 
 #include "../enums.h"
 #include "../load_config/load_config.h"
+#include "../wav_parser/wav_parser.h"
 #include "FrescoWindow.h"
 #include "RouletteDialog.h"
 
@@ -33,7 +34,8 @@ FrescoWindow::FrescoWindow(const QString &data_file_path, const QString &rating_
 
     this->evil_style = false;
 
-    this->init_sound();
+    this->spin_sound_duration = get_wav_duration(":spin_sound");
+
     this->init_ui();
     this->create_connections();
     this->parse_csv(data_file_path, rating_col_name);
@@ -195,18 +197,6 @@ void FrescoWindow::init_remaining_time_label() {
     this->ui.remaining_time_label->setText(label_text);
 }
 
-void FrescoWindow::init_sound() {
-    QPointer<QMediaPlayer> spin_player = new QMediaPlayer(this);
-    QPointer<QAudioOutput> audio_output = new QAudioOutput(this);
-    audio_output->setMuted(true);
-    spin_player->setAudioOutput(audio_output);
-    spin_player->setSource(QUrl("qrc:spin_sound"));
-    connect(spin_player, &QMediaPlayer::durationChanged, this, [=]{
-        this->spin_sound_duration = spin_player->duration();
-        this->ui.roulette_button->setEnabled(true);
-    });
-}
-
 void FrescoWindow::init_ui() {
     this->ui.setupUi(this);
 
@@ -245,7 +235,6 @@ void FrescoWindow::init_ui() {
 
     this->ui.generate_riddle_button->setEnabled(false);
     this->ui.refresh_questions_button->setEnabled(false);
-    this->ui.roulette_button->setEnabled(false);
     this->ui.start_timer_button->setEnabled(false);
     this->ui.stop_timer_button->setEnabled(false);
 }

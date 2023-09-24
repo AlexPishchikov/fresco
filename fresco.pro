@@ -17,6 +17,7 @@ FORMS += res/ui/download_dialog.ui \
 HEADERS += src/custom_widgets/QHoleLabel.h \
            src/custom_widgets/QRoundPushButton.h \
            src/load_config/load_config.h \
+           src/wav_parser/wav_parser.h \
            src/workers/DownloadWorker.h \
            src/windows/DownloadDialog.h \
            src/windows/FrescoWindow.h \
@@ -26,6 +27,7 @@ SOURCES += main.cpp \
            src/custom_widgets/QHoleLabel.cpp \
            src/custom_widgets/QRoundPushButton.cpp \
            src/load_config/load_config.cpp \
+           src/wav_parser/wav_parser.cpp \
            src/workers/DownloadWorker.cpp \
            src/windows/DownloadDialog.cpp \
            src/windows/FrescoWindow.cpp \

@@ -59,8 +59,6 @@ class FrescoWindow : public QMainWindow {
 
         void init_remaining_time_label();
 
-        void init_sound();
-
         void init_ui();
 
         void parse_csv(const QString &file_name, const QString &rating_col_name);
