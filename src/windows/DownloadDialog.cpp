@@ -63,12 +63,7 @@ bool DownloadDialog::check_table_structure(const QString &file_path) const {
 }
 
 bool DownloadDialog::is_correct_url() const {
-    if (this->is_url() && this->ui.url_line_edit->text().split('=').size() >= 2 && this->ui.url_line_edit->text().split('/').size() >= 2) {
-        bool is_number;
-        this->ui.url_line_edit->text().split('=')[1].toUInt(&is_number, 10);
-        return is_number;
-    }
-    return false;
+    return this->is_url() && this->ui.url_line_edit->text().split("gid=").size() >= 2 && this->ui.url_line_edit->text().split('/').size() >= 2;
 }
 
 bool DownloadDialog::is_url() const {
@@ -77,7 +72,7 @@ bool DownloadDialog::is_url() const {
 }
 
 QString DownloadDialog::get_sheet_id_from_url(const QString &url) const {
-    return url.split('=')[1];
+    return this->ui.url_line_edit->text().split("/edit").last().split('#').filter("gid=")[0].split('=').last();
 }
 
 QString DownloadDialog::get_table_id_from_url(const QString &url) const {
@@ -152,6 +147,8 @@ void DownloadDialog::load_table_by_url(const bool cache) {
 
     const QString table_id = this->get_table_id_from_url(this->ui.url_line_edit->text());
     const QString sheet_id = this->get_sheet_id_from_url(this->ui.url_line_edit->text());
+
+    this->ui.url_line_edit->setText(QString("%1/edit#gid=%2").arg(this->ui.url_line_edit->text().split("/edit")[0]).arg(sheet_id));
 
     const QUrl load_table_url = QString("https://docs.google.com/spreadsheets/d/%1/export?format=csv&id=%1&gid=%2").arg(table_id, sheet_id);
 

@@ -13,7 +13,6 @@
 #include <QJSValue>
 #include <QJSValueList>
 #include <QMainWindow>
-#include <QMediaPlayer>
 #include <QPixmap>
 #include <QPointer>
 #include <QPushButton>
