@@ -10,9 +10,9 @@
 
 Каждый вопрос выпадает единожды при каждой загрузке файла с вопросами.
 
-Некоторые элементы приложения можно настраивать через конфигурационный файл. Для этого необходимо создать файл `config.json` в папке с файлом `main.py` и перечислить в нём нужные параметры. Ключи для конфигурационного файла можно посмотреть [здесь](https://github.com/AlexPishchikov/fresco/blob/master/res/default_config/README.md).
+Некоторые элементы приложения можно настраивать через конфигурационный файл. Для этого необходимо создать файл `config.json` в папке с файлом `main.cpp` и перечислить в нём нужные параметры. Ключи для конфигурационного файла можно посмотреть [здесь](https://github.com/AlexPishchikov/fresco/blob/master/res/default_config/README.md).
 
 А [здесь](https://github.com/AlexPishchikov/fresco/blob/master/res/default_config/config_example.json) можно увидеть пример такого файла.
 
-### Команда запуска
-`qmake6 fresco.pro && make && ./fresco`
+### Сборка и запуск
+`qmake fresco.pro && make && ./fresco`
