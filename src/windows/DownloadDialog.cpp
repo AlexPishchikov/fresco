@@ -72,7 +72,7 @@ bool DownloadDialog::is_url() const {
 }
 
 QString DownloadDialog::get_sheet_id_from_url(const QString &url) const {
-    return this->ui.url_line_edit->text().split("/edit").last().split('#').filter("gid=")[0].split('=').last();
+    return url.split("/edit").last().split('#').filter("gid=")[0].split('=').last();
 }
 
 QString DownloadDialog::get_table_id_from_url(const QString &url) const {
