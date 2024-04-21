@@ -1,8 +1,10 @@
 #pragma once
 
 #include <QDialog>
+#include <QJsonArray>
 #include <QJsonObject>
 #include <QMovie>
+#include <QPointer>
 #include <QString>
 #include <QStringList>
 #include <QWidget>
@@ -16,31 +18,31 @@ class DownloadDialog : public QDialog {
     public:
         DownloadDialog(QWidget *parent = nullptr);
     private:
-        DownloadWorker worker;
-
         QJsonObject config;
 
         QMovie loading_gif;
+
+        QPointer<DownloadWorker> worker;
 
         Theme current_theme;
 
         Ui::DownloadDialogUi ui;
 
-        bool check_table_structure(const QString &file_path) const;
+        bool is_valid_table(const QString &file_path) const;
 
-        bool is_correct_url() const;
+        bool is_valid_url() const;
 
         bool is_url() const;
+
+        QJsonArray get_cache_data(const QStringList &types) const;
 
         QString get_sheet_id_from_url(const QString &url) const;
 
         QString get_table_id_from_url(const QString &url) const;
 
-        QString get_url_from_file(const QString &filename) const;
+        QString get_url_by_name(const QString &filename) const;
 
-        QStringList get_tables_list() const;
-
-        void fill_combo_box();
+        void fill_tables_combo_box();
 
         void init_cached_tables_dir() const;
 
@@ -52,6 +54,8 @@ class DownloadDialog : public QDialog {
 
         void run_loading_gif();
 
+        void save_cache(const QJsonArray &cache_data) const;
+
         void set_theme(const Theme theme);
 
         void set_widgets_enabled(const bool status);
@@ -59,4 +63,6 @@ class DownloadDialog : public QDialog {
         void show_fresco_window(const QString &data_file_name);
 
         void update_cache(const bool cache);
+
+        void update_rating_column_names_combo_box(const QString &current_table_name);
 };

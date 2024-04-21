@@ -91,11 +91,18 @@
          <property name="minimumSize">
           <size>
            <width>0</width>
-           <height>90</height>
+           <height>60</height>
           </size>
          </property>
          <property name="text">
           <string>Загрузить из файла</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="rating_column_name_combo_box">
+         <property name="editable">
+          <bool>true</bool>
          </property>
         </widget>
        </item>

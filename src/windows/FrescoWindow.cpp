@@ -244,7 +244,13 @@ void FrescoWindow::parse_csv(const QString &data_file_path, const QString &ratin
 
     this->time.push_back(-1);
 
-    const int rating_col_index = QString(table_file.readLine()).split(',').indexOf(rating_col_name);
+    const QStringList raw_col_names = QString(table_file.readLine()).split(',');
+    QStringList col_names;
+    for (const QString& name : raw_col_names) {
+        col_names.push_back(name.simplified());
+    }
+
+    const int rating_col_index = col_names.indexOf(rating_col_name);
     const QRegularExpression regex(",\s*(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
     while (!table_file.atEnd()) {
         const QStringList line = QString(table_file.readLine()).split(regex);
