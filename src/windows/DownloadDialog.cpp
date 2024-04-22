@@ -44,10 +44,12 @@ DownloadDialog::DownloadDialog(QWidget *parent) : QDialog(parent) {
     connect(this->ui.load_from_file_button, &QPushButton::clicked, this, [=]{this->load_table_from_file();});
     connect(this->ui.load_from_folder_button, &QPushButton::clicked, this, [=]{this->load_table_from_cache();});
 
-    connect(this->ui.tables_combo_box, &QComboBox::currentTextChanged, this, [=]{this->update_rating_column_names_combo_box(this->ui.tables_combo_box->currentText());});
-
     this->set_theme(static_cast<Theme>(this->config["download_dialog_start_theme"].toInt() % Theme::count));
-    connect(this->ui.switch_theme_button, &QPushButton::clicked, this, [=]{this->set_theme(static_cast<Theme>((this->current_theme + 1) % Theme::count));});
+    connect(this->ui.switch_theme_button, &QPushButton::clicked, this,
+            [=]{this->set_theme(static_cast<Theme>((this->current_theme + 1) % Theme::count));});
+
+    connect(this->ui.tables_combo_box, &QComboBox::currentTextChanged, this,
+            [=]{this->update_rating_column_names_combo_box(this->ui.tables_combo_box->currentText());});
 
     QRadialGradient gradient = QRadialGradient(QPoint(339, 20), 320, QPoint(319, 20), 20);
     gradient.setColorAt(0.0, QColor(0, 0, 0, 255));
@@ -182,8 +184,7 @@ void DownloadDialog::load_table_from_cache() {
         return;
     }
 
-    this->setWindowTitle(QString("%1 ~ %2").arg(this->config["download_dialog_window_title"].toString())
-                                           .arg(this->ui.tables_combo_box->currentText()));
+    this->setWindowTitle(QString("%1 ~ %2").arg(this->config["download_dialog_window_title"].toString(), this->ui.tables_combo_box->currentText()));
 
     this->current_column_name = this->ui.rating_column_name_combo_box->currentText().simplified();
     this->current_table_name = this->ui.tables_combo_box->currentText().simplified();
@@ -254,6 +255,7 @@ void DownloadDialog::set_widgets_enabled(const bool status) {
     this->ui.load_from_file_button->setEnabled(status);
     this->ui.load_from_folder_button->setEnabled(status);
     this->ui.rating_column_name_combo_box->setEnabled(status);
+    this->ui.tables_combo_box->setEnabled(status);
     this->ui.switch_theme_button->setEnabled(status);
 }
 
