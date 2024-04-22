@@ -24,15 +24,21 @@ class DownloadDialog : public QDialog {
 
         QPointer<DownloadWorker> worker;
 
+        QString current_column_name;
+
+        QString current_table_name;
+
+        QString current_url;
+
         Theme current_theme;
 
         Ui::DownloadDialogUi ui;
 
         bool is_valid_table(const QString &file_path) const;
 
-        bool is_valid_url() const;
+        bool is_valid_url(const QString &url) const;
 
-        bool is_url() const;
+        bool is_url(const QString &url) const;
 
         QJsonArray get_cache_data(const QStringList &types) const;
 

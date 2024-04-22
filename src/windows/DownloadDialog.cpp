@@ -75,13 +75,13 @@ bool DownloadDialog::is_valid_table(const QString &file_path) const {
     return false;
 }
 
-bool DownloadDialog::is_valid_url() const {
-    return this->is_url() && this->ui.url_line_edit->text().split("gid=").size() >= 2 && this->ui.url_line_edit->text().split('/').size() >= 2;
+bool DownloadDialog::is_valid_url(const QString &url) const {
+    return this->is_url(url) && url.split("gid=").size() >= 2 && url.split('/').size() >= 2;
 }
 
-bool DownloadDialog::is_url() const {
+bool DownloadDialog::is_url(const QString &url) const {
     const QRegularExpression regex("^(?:https://|http://)?(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?))|(?:/?|[/?]\S+)$");
-    return regex.match(this->ui.url_line_edit->text()).hasMatch();
+    return regex.match(url).hasMatch();
 }
 
 QJsonArray DownloadDialog::get_cache_data(const QStringList &types) const {
@@ -149,17 +149,22 @@ void DownloadDialog::load_table_by_url(const bool cache) {
     this->set_widgets_enabled(false);
     this->run_loading_gif();
 
-    if (!this->is_valid_url()) {
+    if (cache) {
+        this->ui.url_line_edit->setText(this->current_url);
+    }
+    else {
+        this->current_column_name = this->ui.rating_column_name_combo_box->currentText().simplified();
+        this->current_url = this->ui.url_line_edit->text().simplified();
+    }
+
+    if (!this->is_valid_url(this->current_url)) {
         this->ui.status_label->setText("Некорректная ссылка");
         this->set_widgets_enabled(true);
         return;
     }
 
-    const QString table_id = this->get_table_id_from_url(this->ui.url_line_edit->text());
-    const QString sheet_id = this->get_sheet_id_from_url(this->ui.url_line_edit->text());
-
-    this->ui.url_line_edit->setText(QString("%1/edit#gid=%2").arg(this->ui.url_line_edit->text().split("/edit")[0]).arg(sheet_id));
-
+    const QString table_id = this->get_table_id_from_url(this->current_url);
+    const QString sheet_id = this->get_sheet_id_from_url(this->current_url);
     const QUrl table_url = QString("https://docs.google.com/spreadsheets/d/%1/export?format=csv&id=%1&gid=%2").arg(table_id, sheet_id);
 
     if (!this->worker.isNull()) {
@@ -180,7 +185,10 @@ void DownloadDialog::load_table_from_cache() {
     this->setWindowTitle(QString("%1 ~ %2").arg(this->config["download_dialog_window_title"].toString())
                                            .arg(this->ui.tables_combo_box->currentText()));
 
-    this->ui.url_line_edit->setText(this->get_url_by_name(this->ui.tables_combo_box->currentText()));
+    this->current_column_name = this->ui.rating_column_name_combo_box->currentText().simplified();
+    this->current_table_name = this->ui.tables_combo_box->currentText().simplified();
+    this->current_url = this->get_url_by_name(this->current_table_name).simplified();
+
     this->load_table_by_url(true);
 }
 
@@ -192,12 +200,13 @@ void DownloadDialog::load_table_from_file() {
 
     this->run_loading_gif();
 
+    this->current_column_name = this->ui.rating_column_name_combo_box->currentText().simplified();
+
     QFile table_file(file_path);
     table_file.open(QFile::ReadOnly);
 
     auto file_data = QString(table_file.readAll()).split(',');
     const QRegularExpression regex("\"[^\"]+\"");
-
     for (int i = 0; i < file_data.size(); i++) {
         if (regex.match(file_data[i]).hasMatch()) {
             file_data[i] = file_data[i].replace('\n', ' ');
@@ -206,7 +215,6 @@ void DownloadDialog::load_table_from_file() {
 
     table_file.close();
     table_file.open(QFile::WriteOnly);
-
     table_file.write(file_data.join(',').toUtf8());
     table_file.close();
 
@@ -250,8 +258,11 @@ void DownloadDialog::set_widgets_enabled(const bool status) {
 }
 
 void DownloadDialog::show_fresco_window(const QString &data_file_name) {
+    if (!this->worker.isNull()) {
+        delete this->worker;
+    }
     this->close();
-    QPointer<FrescoWindow> fresco_window = new FrescoWindow(data_file_name, this->ui.rating_column_name_combo_box->currentText(), this->current_theme);
+    QPointer<FrescoWindow> fresco_window = new FrescoWindow(data_file_name, this->current_column_name, this->current_theme);
     fresco_window->show();
 }
 
@@ -260,24 +271,23 @@ void DownloadDialog::update_cache(const bool cache) {
 
     if (this->worker->get_status_code() != 200) {
         if (cache) {
+            const QJsonObject current_table_data = QJsonObject({{ "url", this->current_url },
+                                                                { "table_name", this->current_table_name },
+                                                                { "column_name", this->current_column_name }});
+            const QString current_table_path = QString("%1%2").arg(this->config["download_dialog_folder_name"].toString(), this->current_table_name);
             QJsonArray cache_data = this->get_cache_data(QStringList({ QString("url"), QString("table_name"), QString("column_name") }));
             for (const QJsonValueConstRef &object : cache_data) {
-                const QString current_name = object[QString("table_name")].toString();
-                const QString current_path = QString("%1%2").arg(this->config["download_dialog_folder_name"].toString()).arg(current_name);
-                if (object[QString("url")].toString() == this->ui.url_line_edit->text().simplified()) {
-                    if (!this->is_valid_table(current_path)) {
-                        this->ui.status_label->setText(QString("Не найден стобец «%1»").arg(this->ui.rating_column_name_combo_box->currentText()));
+                if (this->current_url == object[QString("url")].toString()) {
+                    if (!this->is_valid_table(current_table_path)) {
+                        this->ui.status_label->setText(QString("Не найден стобец «%1»").arg(this->current_column_name));
                         this->set_widgets_enabled(true);
                     }
                     else {
-                        const QJsonObject current_data = QJsonObject({{ "url", object[QString("url")].toString() },
-                                                                      { "table_name", current_name },
-                                                                      { "column_name", this->ui.rating_column_name_combo_box->currentText() }});
-                        if (!cache_data.contains(current_data)) {
-                            cache_data.push_back(current_data);
+                        if (!cache_data.contains(current_table_data)) {
+                            cache_data.push_back(current_table_data);
                             this->save_cache(cache_data);
                         }
-                        this->show_fresco_window(current_path);
+                        this->show_fresco_window(current_table_path);
                     }
                     break;
                 }
@@ -289,10 +299,16 @@ void DownloadDialog::update_cache(const bool cache) {
         }
     }
     else {
-        const QJsonObject current_table_data = QJsonObject({{ "url", this->ui.url_line_edit->text().simplified() },
-                                                            { "table_name", this->worker->get_file_path().split('/').last() },
-                                                            { "column_name", this->ui.rating_column_name_combo_box->currentText() }});
-        if (this->is_valid_table(this->worker->get_file_path())) {
+        const QString current_table_path = this->worker->get_file_path();
+        if (!cache) {
+            this->current_table_name = current_table_path.split("/").last();
+        }
+
+        const QJsonObject current_table_data = QJsonObject({{ "url", this->current_url },
+                                                            { "table_name", this->current_table_name },
+                                                            { "column_name", this->current_column_name }});
+
+        if (this->is_valid_table(current_table_path)) {
             QJsonArray cache_data = this->get_cache_data(QStringList({ QString("url"), QString("table_name"), QString("column_name") }));
             if (!cache_data.contains(current_table_data)) {
                 cache_data.push_back(current_table_data);
@@ -301,8 +317,8 @@ void DownloadDialog::update_cache(const bool cache) {
             this->show_fresco_window(this->worker->get_file_path());
         }
         else {
-            this->ui.status_label->setText(QString("Не найден стобец «%1»").arg(current_table_data[QString("column_name")].toString()));
-            QFile::remove(this->worker->get_file_path());
+            this->ui.status_label->setText(QString("Не найден стобец «%1»").arg(this->current_column_name));
+            QFile::remove(current_table_path);
             this->set_widgets_enabled(true);
         }
     }
