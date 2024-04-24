@@ -36,9 +36,6 @@ void DownloadWorker::download_finished(const QString &save_path) {
         return;
     }
 
-    QMimeData headers;
-    headers.setData("text/uri-list", this->reply->header(QNetworkRequest::ContentDispositionHeader).toByteArray());
-
     if (this->reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 200) {
         QStringList data = QString(this->reply->readAll()).split(',');
         const QRegularExpression regex("\"[^\"]+\"");
@@ -48,7 +45,8 @@ void DownloadWorker::download_finished(const QString &save_path) {
             }
         }
 
-        this->file_path = save_path + headers.text().split('\'').last().remove(QRegularExpression("%([A-F0-9]{2})"));
+        const QUrl header = QUrl(this->reply->header(QNetworkRequest::ContentDispositionHeader).toByteArray());
+        this->file_path = QString("%1%2").arg(save_path, header.toString().split('\'').last().remove(QRegularExpression("%([A-F0-9]{2})")));
         QFile table(this->file_path);
         table.open(QFile::WriteOnly);
         table.write(data.join(',').toUtf8());
