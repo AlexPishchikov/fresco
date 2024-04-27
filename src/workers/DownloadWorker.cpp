@@ -1,7 +1,6 @@
 #include <QFile>
 #include <QNetworkReply>
 #include <QNetworkRequest>
-#include <QMimeData>
 #include <QRegularExpression>
 #include <QString>
 #include <QUrl>

@@ -9,6 +9,7 @@
 #include <QTimer>
 
 #include "../../build/ui/ui_fresco.h"
+#include "../configs/FrescoWindowConfig.h"
 #include "../enums.h"
 #include "RouletteDialog.h"
 
@@ -19,9 +20,9 @@ class FrescoWindow : public QMainWindow {
     private:
         bool evil_style;
 
-        int spin_sound_duration;
+        FrescoWindowConfig config;
 
-        QJsonObject config;
+        int spin_sound_duration;
 
         QList<int> time;
 
@@ -46,8 +47,6 @@ class FrescoWindow : public QMainWindow {
         void add_student_to_combo_box(const QString &name, const int rating);
 
         void cells_count_spin_box_changed();
-
-        void check_config();
 
         void clear();
 

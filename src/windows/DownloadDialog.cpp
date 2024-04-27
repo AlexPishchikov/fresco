@@ -20,16 +20,16 @@
 #include <QWidget>
 
 #include "../enums.h"
-#include "../load_config/load_config.h"
+#include "../configs/DownloadDialogConfig.h"
 #include "../workers/DownloadWorker.h"
 #include "DownloadDialog.h"
 #include "FrescoWindow.h"
 
 
 DownloadDialog::DownloadDialog(QWidget *parent) : QDialog(parent) {
-    this->config = load_config(":download_dialog_config_default");
-    if (this->config["download_dialog_folder_name"].toString().at(-1) != '/') {
-        this->config["download_dialog_folder_name"] = QJsonValue(QString("%1/").arg(this->config["download_dialog_folder_name"].toString()));
+    this->config = DownloadDialogConfig();
+    if (this->config.cache_folder_name.at(-1) != '/') {
+        this->config.cache_folder_name = QString('/').prepend(this->config.cache_folder_name);
     }
 
     this->init_cached_tables_dir();
@@ -38,13 +38,13 @@ DownloadDialog::DownloadDialog(QWidget *parent) : QDialog(parent) {
 
     this->setFixedSize(this->size());
 
-    this->setWindowTitle(this->config["download_dialog_window_title"].toString());
+    this->setWindowTitle(this->config.window_title);
 
     connect(this->ui.load_from_url_button, &QPushButton::clicked, this, [=]{this->load_table_by_url();});
     connect(this->ui.load_from_file_button, &QPushButton::clicked, this, [=]{this->load_table_from_file();});
     connect(this->ui.load_from_folder_button, &QPushButton::clicked, this, [=]{this->load_table_from_cache();});
 
-    this->set_theme(static_cast<Theme>(this->config["download_dialog_start_theme"].toInt() % Theme::count));
+    this->set_theme(static_cast<Theme>(this->config.start_theme % Theme::count));
     connect(this->ui.switch_theme_button, &QPushButton::clicked, this,
             [=]{this->set_theme(static_cast<Theme>((this->current_theme + 1) % Theme::count));});
 
@@ -87,7 +87,7 @@ bool DownloadDialog::is_url(const QString &url) const {
 }
 
 QJsonArray DownloadDialog::get_cache_data(const QStringList &types) const {
-    QFile cache_file(QString("%1.tables_list.json").arg(this->config["download_dialog_folder_name"].toString()));
+    QFile cache_file(QString("%1.tables_list.json").arg(this->config.cache_folder_name));
     cache_file.open(QFile::ReadOnly);
     const QJsonArray cache_data = QJsonDocument::fromJson(cache_file.readAll()).array();
 
@@ -125,7 +125,7 @@ QString DownloadDialog::get_url_by_name(const QString &filename) const {
 }
 
 void DownloadDialog::fill_tables_combo_box() {
-    const QDir tables_folder(this->config["download_dialog_folder_name"].toString());
+    const QDir tables_folder(this->config.cache_folder_name);
     const QStringList files_list = tables_folder.entryList(QStringList() << "*.csv", QDir::Files);
     const QJsonArray tables_list = this->get_cache_data(QStringList("table_name"));
     for (const QJsonValueConstRef &table_name : tables_list) {
@@ -137,12 +137,12 @@ void DownloadDialog::fill_tables_combo_box() {
 }
 
 void DownloadDialog::init_cached_tables_dir() const {
-    if (!QFileInfo::exists(this->config["download_dialog_folder_name"].toString())) {
-        QDir().mkdir(this->config["download_dialog_folder_name"].toString());
+    if (!QFileInfo::exists(this->config.cache_folder_name)) {
+        QDir().mkdir(this->config.cache_folder_name);
     }
 
-    if (!QFileInfo::exists(QString("%1.tables_list.json").arg(this->config["download_dialog_folder_name"].toString()))) {
-        QFile tables_list_file(QString("%1.tables_list.json").arg(this->config["download_dialog_folder_name"].toString()));
+    if (!QFileInfo::exists(QString("%1.tables_list.json").arg(this->config.cache_folder_name))) {
+        QFile tables_list_file(QString("%1.tables_list.json").arg(this->config.cache_folder_name));
         tables_list_file.open(QFile::WriteOnly);
     }
 }
@@ -176,7 +176,7 @@ void DownloadDialog::load_table_by_url(const bool cache) {
     this->worker = new DownloadWorker;
 
     connect(this->worker, &DownloadWorker::finished, this, [=]{this->update_cache(cache);});
-    this->worker->download(table_url, this->config["download_dialog_folder_name"].toString());
+    this->worker->download(table_url, this->config.cache_folder_name);
 }
 
 void DownloadDialog::load_table_from_cache() {
@@ -184,7 +184,7 @@ void DownloadDialog::load_table_from_cache() {
         return;
     }
 
-    this->setWindowTitle(QString("%1 ~ %2").arg(this->config["download_dialog_window_title"].toString(), this->ui.tables_combo_box->currentText()));
+    this->setWindowTitle(QString("%1 ~ %2").arg(this->config.window_title, this->ui.tables_combo_box->currentText()));
 
     this->current_column_name = this->ui.rating_column_name_combo_box->currentText().simplified();
     this->current_table_name = this->ui.tables_combo_box->currentText().simplified();
@@ -234,7 +234,7 @@ void DownloadDialog::run_loading_gif() {
 }
 
 void DownloadDialog::save_cache(const QJsonArray &cache_data) const {
-    QFile cache_file(QString("%1.tables_list.json").arg(this->config["download_dialog_folder_name"].toString()));
+    QFile cache_file(QString("%1.tables_list.json").arg(this->config.cache_folder_name));
     cache_file.open(QFile::WriteOnly);
     cache_file.write(QJsonDocument(cache_data).toJson());
 }
@@ -269,14 +269,14 @@ void DownloadDialog::show_fresco_window(const QString &data_file_name) {
 }
 
 void DownloadDialog::update_cache(const bool cache) {
-    this->setWindowTitle(this->config["download_dialog_window_title"].toString());
+    this->setWindowTitle(this->config.window_title);
 
     if (this->worker->get_status_code() != 200) {
         if (cache) {
             const QJsonObject current_table_data = QJsonObject({{ "url", this->current_url },
                                                                 { "table_name", this->current_table_name },
                                                                 { "column_name", this->current_column_name }});
-            const QString current_table_path = QString("%1%2").arg(this->config["download_dialog_folder_name"].toString(), this->current_table_name);
+            const QString current_table_path = QString("%1%2").arg(this->config.cache_folder_name, this->current_table_name);
             QJsonArray cache_data = this->get_cache_data(QStringList({ QString("url"), QString("table_name"), QString("column_name") }));
             for (const QJsonValueConstRef &object : cache_data) {
                 if (this->current_url == object[QString("url")].toString()) {
@@ -335,7 +335,7 @@ void DownloadDialog::update_rating_column_names_combo_box(const QString &current
         }
     }
     if (rating_column_names.size() == 0) {
-        rating_column_names.push_back(this->config["download_dialog_rating_column_name"].toString());
+        rating_column_names.push_back(this->config.rating_column_name);
     }
 
     rating_column_names.sort();

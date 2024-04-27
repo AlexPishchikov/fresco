@@ -10,6 +10,7 @@
 #include <QWidget>
 
 #include "../../build/ui/ui_download_dialog.h"
+#include "../configs/DownloadDialogConfig.h"
 #include "../enums.h"
 #include "../workers/DownloadWorker.h"
 
@@ -18,7 +19,7 @@ class DownloadDialog : public QDialog {
     public:
         DownloadDialog(QWidget *parent = nullptr);
     private:
-        QJsonObject config;
+        DownloadDialogConfig config;
 
         QMovie loading_gif;
 
