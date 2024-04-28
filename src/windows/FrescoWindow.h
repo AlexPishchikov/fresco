@@ -9,8 +9,8 @@
 #include <QTimer>
 
 #include "../../build/ui/ui_fresco.h"
+#include "../Theme.h"
 #include "../configs/FrescoWindowConfig.h"
-#include "../enums.h"
 #include "RouletteDialog.h"
 
 

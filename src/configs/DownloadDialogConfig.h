@@ -2,7 +2,7 @@
 
 #include <QString>
 
-#include "../enums.h"
+#include "../Theme.h"
 #include "Config.h"
 
 

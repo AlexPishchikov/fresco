@@ -20,8 +20,8 @@
 #include <QString>
 #include <QTimer>
 
+#include "../Theme.h"
 #include "../configs/FrescoWindowConfig.h"
-#include "../enums.h"
 #include "../wav_parser/wav_parser.h"
 #include "FrescoWindow.h"
 #include "RouletteDialog.h"
@@ -97,7 +97,7 @@ void FrescoWindow::clear() {
 }
 
 void FrescoWindow::create_connections() {
-    connect(this->ui.switch_theme_button, &QPushButton::clicked, this, [=]{this->set_theme(static_cast<Theme>((this->current_theme + 1) % Theme::count));});
+    connect(this->ui.switch_theme_button, &QPushButton::clicked, this, [=]{this->set_theme(static_cast<Theme>((this->current_theme + 1) % Theme::Count));});
     connect(this->ui.clear_button, &QPushButton::clicked, this, [=]{this->clear();});
     connect(this->ui.generate_riddle_button, &QPushButton::clicked, this, [=]{this->generate_riddle();});
     connect(this->ui.refresh_questions_button, &QPushButton::clicked, this, [=]{this->import_questions_from_TeX();});

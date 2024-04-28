@@ -1,18 +1,15 @@
 #pragma once
 
 #include <QDialog>
-#include <QJsonArray>
-#include <QJsonObject>
 #include <QMovie>
 #include <QPointer>
 #include <QString>
-#include <QStringList>
 #include <QWidget>
 
 #include "../../build/ui/ui_download_dialog.h"
+#include "../Theme.h"
 #include "../cache/Cache.h"
 #include "../configs/DownloadDialogConfig.h"
-#include "../enums.h"
 #include "../workers/DownloadWorker.h"
 
 

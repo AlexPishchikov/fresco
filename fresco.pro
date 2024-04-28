@@ -14,7 +14,8 @@ UI_DIR = build/ui
 FORMS += res/ui/download_dialog.ui \
          res/ui/fresco.ui
 
-HEADERS += src/cache/Cache.h \
+HEADERS += src/Theme.h \
+           src/cache/Cache.h \
            src/cache/ContentType.h \
            src/configs/Config.h \
            src/configs/DownloadDialogConfig.h \

@@ -3,10 +3,8 @@
 #include <QDir>
 #include <QFile>
 #include <QFileDialog>
-#include <QFileInfo>
 #include <QGraphicsOpacityEffect>
 #include <QJsonArray>
-#include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonValue>
 #include <QPoint>
@@ -20,7 +18,7 @@
 #include <QVariant>
 #include <QWidget>
 
-#include "../enums.h"
+#include "../Theme.h"
 #include "../cache/Cache.h"
 #include "../cache/ContentType.h"
 #include "../configs/DownloadDialogConfig.h"
@@ -44,9 +42,9 @@ DownloadDialog::DownloadDialog(QWidget *parent) : QDialog(parent) {
     connect(this->ui.load_from_file_button, &QPushButton::clicked, this, [=]{this->load_table_from_file();});
     connect(this->ui.load_from_folder_button, &QPushButton::clicked, this, [=]{this->load_table_from_cache();});
 
-    this->set_theme(static_cast<Theme>(this->config.start_theme % Theme::count));
+    this->set_theme(static_cast<Theme>(this->config.start_theme % Theme::Count));
     connect(this->ui.switch_theme_button, &QPushButton::clicked, this,
-            [=]{this->set_theme(static_cast<Theme>((this->current_theme + 1) % Theme::count));});
+            [=]{this->set_theme(static_cast<Theme>((this->current_theme + 1) % Theme::Count));});
 
     connect(this->ui.tables_combo_box, &QComboBox::currentTextChanged, this,
             [=]{this->update_rating_column_names_combo_box(this->ui.tables_combo_box->currentText());});

@@ -1,6 +1,6 @@
 #include <QJsonObject>
 
-#include "../enums.h"
+#include "../Theme.h"
 #include "Config.h"
 #include "DownloadDialogConfig.h"
 
