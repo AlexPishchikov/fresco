@@ -10,6 +10,7 @@
 #include <QWidget>
 
 #include "../../build/ui/ui_download_dialog.h"
+#include "../cache/Cache.h"
 #include "../configs/DownloadDialogConfig.h"
 #include "../enums.h"
 #include "../workers/DownloadWorker.h"
@@ -19,6 +20,8 @@ class DownloadDialog : public QDialog {
     public:
         DownloadDialog(QWidget *parent = nullptr);
     private:
+        Cache cache;
+
         DownloadDialogConfig config;
 
         QMovie loading_gif;
@@ -41,8 +44,6 @@ class DownloadDialog : public QDialog {
 
         bool is_url(const QString &url) const;
 
-        QJsonArray get_cache_data(const QStringList &types) const;
-
         QString get_sheet_id_from_url(const QString &url) const;
 
         QString get_table_id_from_url(const QString &url) const;
@@ -51,17 +52,13 @@ class DownloadDialog : public QDialog {
 
         void fill_tables_combo_box();
 
-        void init_cached_tables_dir() const;
-
-        void load_table_by_url(const bool cache = false);
+        void load_table_by_url(const bool is_cached = false);
 
         void load_table_from_cache();
 
         void load_table_from_file();
 
         void run_loading_gif();
-
-        void save_cache(const QJsonObject &current_object) const;
 
         void set_theme(const Theme theme);
 

@@ -14,7 +14,9 @@ UI_DIR = build/ui
 FORMS += res/ui/download_dialog.ui \
          res/ui/fresco.ui
 
-HEADERS += src/configs/Config.h \
+HEADERS += src/cache/Cache.h \
+           src/cache/ContentType.h \
+           src/configs/Config.h \
            src/configs/DownloadDialogConfig.h \
            src/configs/FrescoWindowConfig.h \
            src/configs/RouletteDialogConfig.h \
@@ -27,6 +29,7 @@ HEADERS += src/configs/Config.h \
            src/windows/RouletteDialog.h
 
 SOURCES += main.cpp \
+           src/cache/Cache.cpp \
            src/configs/Config.cpp \
            src/configs/DownloadDialogConfig.cpp \
            src/configs/FrescoWindowConfig.cpp \

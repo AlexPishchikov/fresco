@@ -21,6 +21,8 @@
 #include <QWidget>
 
 #include "../enums.h"
+#include "../cache/Cache.h"
+#include "../cache/ContentType.h"
 #include "../configs/DownloadDialogConfig.h"
 #include "../workers/DownloadWorker.h"
 #include "DownloadDialog.h"
@@ -32,13 +34,10 @@ DownloadDialog::DownloadDialog(QWidget *parent) : QDialog(parent) {
     if (this->config.cache_folder_name.at(-1) != '/') {
         this->config.cache_folder_name = QString('/').prepend(this->config.cache_folder_name);
     }
-
-    this->init_cached_tables_dir();
+    this->cache = Cache(this->config.cache_folder_name);
 
     this->ui.setupUi(this);
-
     this->setFixedSize(this->size());
-
     this->setWindowTitle(this->config.window_title);
 
     connect(this->ui.load_from_url_button, &QPushButton::clicked, this, [=]{this->load_table_by_url();});
@@ -87,24 +86,6 @@ bool DownloadDialog::is_url(const QString &url) const {
     return regex.match(url).hasMatch();
 }
 
-QJsonArray DownloadDialog::get_cache_data(const QStringList &types) const {
-    QFile cache_file(QString("%1.tables_list.json").arg(this->config.cache_folder_name));
-    cache_file.open(QFile::ReadOnly);
-    const QJsonArray cache_data = QJsonDocument::fromJson(cache_file.readAll()).array();
-
-    QJsonArray data_array;
-
-    for (const QJsonValueConstRef &object : cache_data) {
-        QJsonObject temp_json_object;
-        for (const QString &type : types) {
-            temp_json_object.insert(type, object[QString(type)]);
-        }
-        data_array.push_back(temp_json_object);
-    }
-
-    return data_array;
-}
-
 QString DownloadDialog::get_sheet_id_from_url(const QString &url) const {
     return url.split("/edit").last().split('#').filter("gid=")[0].split('=').last();
 }
@@ -115,7 +96,7 @@ QString DownloadDialog::get_table_id_from_url(const QString &url) const {
 }
 
 QString DownloadDialog::get_url_by_name(const QString &filename) const {
-    const QJsonArray cache_data = this->get_cache_data(QStringList({ QString("table_name"), QString("url") }));
+    const QJsonArray cache_data = this->cache.get_data({ContentType::Url, ContentType::TableName});
     for (const QJsonValueConstRef &object : cache_data) {
         if (object[QString("table_name")].toString() == filename) {
             return object[QString("url")].toString();
@@ -128,7 +109,7 @@ QString DownloadDialog::get_url_by_name(const QString &filename) const {
 void DownloadDialog::fill_tables_combo_box() {
     const QDir tables_folder(this->config.cache_folder_name);
     const QStringList files_list = tables_folder.entryList(QStringList() << "*.csv", QDir::Files);
-    const QJsonArray tables_list = this->get_cache_data(QStringList("table_name"));
+    const QJsonArray tables_list = this->cache.get_data({ContentType::TableName});
     for (const QJsonValueConstRef &table_name : tables_list) {
         const QString current_name = table_name[QString("table_name")].toString();
         if (files_list.contains(current_name) && this->ui.tables_combo_box->findText(current_name) == -1) {
@@ -140,22 +121,11 @@ void DownloadDialog::fill_tables_combo_box() {
     }
 }
 
-void DownloadDialog::init_cached_tables_dir() const {
-    if (!QFileInfo::exists(this->config.cache_folder_name)) {
-        QDir().mkdir(this->config.cache_folder_name);
-    }
-
-    if (!QFileInfo::exists(QString("%1.tables_list.json").arg(this->config.cache_folder_name))) {
-        QFile tables_list_file(QString("%1.tables_list.json").arg(this->config.cache_folder_name));
-        tables_list_file.open(QFile::WriteOnly);
-    }
-}
-
-void DownloadDialog::load_table_by_url(const bool cache) {
+void DownloadDialog::load_table_by_url(const bool is_cached) {
     this->set_widgets_enabled(false);
     this->run_loading_gif();
 
-    if (cache) {
+    if (is_cached) {
         this->ui.url_line_edit->setText(this->current_url);
     }
     else {
@@ -179,7 +149,7 @@ void DownloadDialog::load_table_by_url(const bool cache) {
 
     this->worker = new DownloadWorker;
 
-    connect(this->worker, &DownloadWorker::finished, this, [=]{this->update_cache(cache);});
+    connect(this->worker, &DownloadWorker::finished, this, [=]{this->update_cache(is_cached);});
     this->worker->download(table_url, this->config.cache_folder_name);
 }
 
@@ -237,42 +207,6 @@ void DownloadDialog::run_loading_gif() {
     this->loading_gif.start();
 }
 
-void DownloadDialog::save_cache(const QJsonObject &current_object) const {
-    bool is_new_object_cached = false;
-    QJsonArray new_cache;
-    QJsonObject new_object;
-    new_object.insert("url", current_object[QString("url")]);
-    new_object.insert("table_name", current_object[QString("table_name")]);
-
-    const QJsonArray cache_data = this->get_cache_data(QStringList({ QString("url"), QString("table_name"), QString("column_names") }));
-
-    for (const QJsonValueConstRef &object : cache_data) {
-        if (object[QString("url")] != current_object[QString("url")]) {
-            new_cache.push_back(object);
-        }
-        else {
-            is_new_object_cached = true;
-            QJsonArray column_names = object[QString("column_names")].toArray();
-            if (!column_names.contains(current_object[QString("column_names")])) {
-                column_names.push_back(current_object[QString("column_names")]);
-            }
-
-            new_object.insert("column_names", column_names);
-            new_cache.push_back(new_object);
-        }
-    }
-
-    if (!is_new_object_cached) {
-        const QJsonArray column_names = QJsonArray({ current_object[QString("column_names")] });
-        new_object.insert("column_names", column_names);
-        new_cache.push_back(new_object);
-    }
-
-    QFile cache_file(QString("%1.tables_list.json").arg(this->config.cache_folder_name));
-    cache_file.open(QFile::WriteOnly);
-    cache_file.write(QJsonDocument(new_cache).toJson());
-}
-
 void DownloadDialog::set_theme(const Theme theme) {
     this->current_theme = theme;
 
@@ -302,12 +236,12 @@ void DownloadDialog::show_fresco_window(const QString &data_file_name) {
     fresco_window->show();
 }
 
-void DownloadDialog::update_cache(const bool cache) {
+void DownloadDialog::update_cache(const bool is_cached) {
     this->setWindowTitle(this->config.window_title);
 
     if (this->worker->get_status_code() != 200) {
-        if (cache) {
-            const QJsonArray cache_data = this->get_cache_data(QStringList({ QString("url"), QString("table_name"), QString("column_names") }));
+        if (is_cached) {
+            const QJsonArray cache_data = this->cache.get_data({ContentType::Url, ContentType::TableName, ContentType::ColumnNames});
             for (const QJsonValueConstRef &object : cache_data) {
                 if (this->current_url == object[QString("url")].toString()) {
                     const QString current_table_path = QString("%1%2").arg(this->config.cache_folder_name, this->current_table_name);
@@ -315,7 +249,7 @@ void DownloadDialog::update_cache(const bool cache) {
                         const QJsonObject current_table_data = QJsonObject({{ "url", this->current_url },
                                                                             { "table_name", this->current_table_name },
                                                                             { "column_names", this->current_column_name }});
-                        this->save_cache(current_table_data);
+                        this->cache.add(current_table_data);
                         this->show_fresco_window(current_table_path);
                     }
                     else {
@@ -340,12 +274,12 @@ void DownloadDialog::update_cache(const bool cache) {
                                                             { "column_names", this->current_column_name }});
 
         if (this->is_valid_table(current_table_path)) {
-            this->save_cache(current_table_data);
+            this->cache.add(current_table_data);
             this->show_fresco_window(this->worker->get_file_path());
         }
         else {
             this->ui.status_label->setText(QString("Не найден стобец «%1»").arg(this->current_column_name));
-            if (!cache) {
+            if (!is_cached) {
                 QFile::remove(current_table_path);
             }
             this->set_widgets_enabled(true);
@@ -355,7 +289,7 @@ void DownloadDialog::update_cache(const bool cache) {
 
 void DownloadDialog::update_rating_column_names_combo_box(const QString &current_table_name) {
     QStringList rating_column_names;
-    const QJsonArray cache_data = this->get_cache_data(QStringList({ QString("table_name"), QString("column_names") }));
+    const QJsonArray cache_data = this->cache.get_data({ContentType::TableName, ContentType::ColumnNames});
     for (const QJsonValueConstRef &object : cache_data) {
         if (object[QString("table_name")].toString() == current_table_name) {
             const QJsonArray names = object[QString("column_names")].toArray();
