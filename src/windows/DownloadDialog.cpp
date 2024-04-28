@@ -17,6 +17,7 @@
 #include <QString>
 #include <QStringList>
 #include <QUrl>
+#include <QVariant>
 #include <QWidget>
 
 #include "../enums.h"
@@ -96,7 +97,7 @@ QJsonArray DownloadDialog::get_cache_data(const QStringList &types) const {
     for (const QJsonValueConstRef &object : cache_data) {
         QJsonObject temp_json_object;
         for (const QString &type : types) {
-            temp_json_object.insert(type, object[QString(type)].toString());
+            temp_json_object.insert(type, object[QString(type)]);
         }
         data_array.push_back(temp_json_object);
     }
@@ -133,6 +134,9 @@ void DownloadDialog::fill_tables_combo_box() {
         if (files_list.contains(current_name) && this->ui.tables_combo_box->findText(current_name) == -1) {
             this->ui.tables_combo_box->addItem(current_name);
         }
+    }
+    if (this->ui.tables_combo_box->count() == 0) {
+        this->update_rating_column_names_combo_box(QString());
     }
 }
 
@@ -233,10 +237,40 @@ void DownloadDialog::run_loading_gif() {
     this->loading_gif.start();
 }
 
-void DownloadDialog::save_cache(const QJsonArray &cache_data) const {
+void DownloadDialog::save_cache(const QJsonObject &current_object) const {
+    bool is_new_item_cached = false;
+    QJsonArray new_cache;
+    QJsonObject new_object;
+    new_object.insert("url", current_object[QString("url")]);
+    new_object.insert("table_name", current_object[QString("table_name")]);
+
+    const QJsonArray cache_data = this->get_cache_data(QStringList({ QString("url"), QString("table_name"), QString("column_names") }));
+
+    for (const QJsonValueConstRef &object : cache_data) {
+        if (object[QString("url")] != current_object[QString("url")]) {
+            new_cache.push_back(object);
+        }
+        else {
+            is_new_item_cached = true;
+            QJsonArray column_names = object[QString("column_names")].toArray();
+            if (!column_names.contains(current_object[QString("column_names")])) {
+                column_names.push_back(current_object[QString("column_names")]);
+            }
+
+            new_object.insert("column_names", column_names);
+            new_cache.push_back(new_object);
+        }
+    }
+
+    if (!is_new_item_cached) {
+        const QJsonArray column_names = QJsonArray({ current_object[QString("column_names")] });
+        new_object.insert("column_names", column_names);
+        new_cache.push_back(new_object);
+    }
+
     QFile cache_file(QString("%1.tables_list.json").arg(this->config.cache_folder_name));
     cache_file.open(QFile::WriteOnly);
-    cache_file.write(QJsonDocument(cache_data).toJson());
+    cache_file.write(QJsonDocument(new_cache).toJson());
 }
 
 void DownloadDialog::set_theme(const Theme theme) {
@@ -273,23 +307,20 @@ void DownloadDialog::update_cache(const bool cache) {
 
     if (this->worker->get_status_code() != 200) {
         if (cache) {
-            const QJsonObject current_table_data = QJsonObject({{ "url", this->current_url },
-                                                                { "table_name", this->current_table_name },
-                                                                { "column_name", this->current_column_name }});
-            const QString current_table_path = QString("%1%2").arg(this->config.cache_folder_name, this->current_table_name);
-            QJsonArray cache_data = this->get_cache_data(QStringList({ QString("url"), QString("table_name"), QString("column_name") }));
+            const QJsonArray cache_data = this->get_cache_data(QStringList({ QString("url"), QString("table_name"), QString("column_names") }));
             for (const QJsonValueConstRef &object : cache_data) {
                 if (this->current_url == object[QString("url")].toString()) {
-                    if (!this->is_valid_table(current_table_path)) {
-                        this->ui.status_label->setText(QString("Не найден стобец «%1»").arg(this->current_column_name));
-                        this->set_widgets_enabled(true);
+                    const QString current_table_path = QString("%1%2").arg(this->config.cache_folder_name, this->current_table_name);
+                    if (this->is_valid_table(current_table_path)) {
+                        const QJsonObject current_table_data = QJsonObject({{ "url", this->current_url },
+                                                                            { "table_name", this->current_table_name },
+                                                                            { "column_names", this->current_column_name }});
+                        this->save_cache(current_table_data);
+                        this->show_fresco_window(current_table_path);
                     }
                     else {
-                        if (!cache_data.contains(current_table_data)) {
-                            cache_data.push_back(current_table_data);
-                            this->save_cache(cache_data);
-                        }
-                        this->show_fresco_window(current_table_path);
+                        this->ui.status_label->setText(QString("Не найден стобец «%1»").arg(this->current_column_name));
+                        this->set_widgets_enabled(true);
                     }
                     break;
                 }
@@ -302,25 +333,21 @@ void DownloadDialog::update_cache(const bool cache) {
     }
     else {
         const QString current_table_path = this->worker->get_file_path();
-        if (!cache) {
-            this->current_table_name = current_table_path.split("/").last();
-        }
+        this->current_table_name = current_table_path.split("/").last();
 
         const QJsonObject current_table_data = QJsonObject({{ "url", this->current_url },
                                                             { "table_name", this->current_table_name },
-                                                            { "column_name", this->current_column_name }});
+                                                            { "column_names", this->current_column_name }});
 
         if (this->is_valid_table(current_table_path)) {
-            QJsonArray cache_data = this->get_cache_data(QStringList({ QString("url"), QString("table_name"), QString("column_name") }));
-            if (!cache_data.contains(current_table_data)) {
-                cache_data.push_back(current_table_data);
-                this->save_cache(cache_data);
-            }
+            this->save_cache(current_table_data);
             this->show_fresco_window(this->worker->get_file_path());
         }
         else {
             this->ui.status_label->setText(QString("Не найден стобец «%1»").arg(this->current_column_name));
-            QFile::remove(current_table_path);
+            if (!cache) {
+                QFile::remove(current_table_path);
+            }
             this->set_widgets_enabled(true);
         }
     }
@@ -328,12 +355,17 @@ void DownloadDialog::update_cache(const bool cache) {
 
 void DownloadDialog::update_rating_column_names_combo_box(const QString &current_table_name) {
     QStringList rating_column_names;
-    const QJsonArray cache_data = this->get_cache_data(QStringList({ QString("table_name"), QString("column_name") }));
+    const QJsonArray cache_data = this->get_cache_data(QStringList({ QString("table_name"), QString("column_names") }));
     for (const QJsonValueConstRef &object : cache_data) {
         if (object[QString("table_name")].toString() == current_table_name) {
-            rating_column_names.push_back(object[QString("column_name")].toString());
+            const QJsonArray names = object[QString("column_names")].toArray();
+            for (const QVariant &item : names.toVariantList()) {
+                rating_column_names.push_back(item.toString());
+            }
+            break;
         }
     }
+
     if (rating_column_names.size() == 0) {
         rating_column_names.push_back(this->config.rating_column_name);
     }
