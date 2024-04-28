@@ -238,7 +238,7 @@ void DownloadDialog::run_loading_gif() {
 }
 
 void DownloadDialog::save_cache(const QJsonObject &current_object) const {
-    bool is_new_item_cached = false;
+    bool is_new_object_cached = false;
     QJsonArray new_cache;
     QJsonObject new_object;
     new_object.insert("url", current_object[QString("url")]);
@@ -251,7 +251,7 @@ void DownloadDialog::save_cache(const QJsonObject &current_object) const {
             new_cache.push_back(object);
         }
         else {
-            is_new_item_cached = true;
+            is_new_object_cached = true;
             QJsonArray column_names = object[QString("column_names")].toArray();
             if (!column_names.contains(current_object[QString("column_names")])) {
                 column_names.push_back(current_object[QString("column_names")]);
@@ -262,7 +262,7 @@ void DownloadDialog::save_cache(const QJsonObject &current_object) const {
         }
     }
 
-    if (!is_new_item_cached) {
+    if (!is_new_object_cached) {
         const QJsonArray column_names = QJsonArray({ current_object[QString("column_names")] });
         new_object.insert("column_names", column_names);
         new_cache.push_back(new_object);

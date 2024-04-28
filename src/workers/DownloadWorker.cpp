@@ -44,8 +44,8 @@ void DownloadWorker::download_finished(const QString &save_path) {
             }
         }
 
-        const QUrl header = QUrl(this->reply->header(QNetworkRequest::ContentDispositionHeader).toByteArray());
-        this->file_path = QString("%1%2").arg(save_path, header.toString().split('\'').last().remove(QRegularExpression("%([A-F0-9]{2})")));
+        const QString filename = QUrl::fromPercentEncoding(this->reply->header(QNetworkRequest::ContentDispositionHeader).toByteArray());
+        this->file_path = QString("%1%2").arg(save_path, filename.split("filename*=UTF-8''").last());
         QFile table(this->file_path);
         table.open(QFile::WriteOnly);
         table.write(data.join(',').toUtf8());

@@ -61,7 +61,7 @@ class DownloadDialog : public QDialog {
 
         void run_loading_gif();
 
-        void save_cache(const QJsonObject &object) const;
+        void save_cache(const QJsonObject &current_object) const;
 
         void set_theme(const Theme theme);
 
