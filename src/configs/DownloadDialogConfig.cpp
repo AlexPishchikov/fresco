@@ -9,6 +9,9 @@ DownloadDialogConfig::DownloadDialogConfig() : Config() {
     const QJsonObject json_config = this->load_config(":download_dialog_config_default");
 
     this->cache_folder_name = json_config["download_dialog_folder_name"].toString();
+    if (this->cache_folder_name.at(-1) != '/') {
+        this->cache_folder_name.append('/');
+    }
 
     this->rating_column_name = json_config["download_dialog_rating_column_name"].toString();
 

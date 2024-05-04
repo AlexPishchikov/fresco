@@ -29,9 +29,6 @@
 
 DownloadDialog::DownloadDialog(QWidget *parent) : QDialog(parent) {
     this->config = DownloadDialogConfig();
-    if (this->config.cache_folder_name.at(-1) != '/') {
-        this->config.cache_folder_name = QString('/').prepend(this->config.cache_folder_name);
-    }
     this->cache = Cache(this->config.cache_folder_name);
 
     this->ui.setupUi(this);
